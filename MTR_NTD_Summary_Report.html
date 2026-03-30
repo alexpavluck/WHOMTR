@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NTD Mid-Term Review — Country & Disease Summary Report</title>
+<style>
+:root {
+  --bg: #f0f2f5;
+  --card: #ffffff;
+  --header-bg: #0d4a7a;
+  --header2: #1a6fad;
+  --text: #1a202c;
+  --muted: #6b7280;
+  --border: #e2e8f0;
+  --oncho: #2e7d32;
+  --oncho-light: #e8f5e9;
+  --trachoma: #7b1fa2;
+  --trachoma-light: #f3e5f5;
+  --sch: #0277bd;
+  --sch-light: #e1f5fe;
+  --lf: #00695c;
+  --lf-light: #e0f2f1;
+  --cross: #e65100;
+  --cross-light: #fff3e0;
+  --green: #16a34a; --green-bg: #dcfce7;
+  --yellow: #ca8a04; --yellow-bg: #fef9c3;
+  --red: #dc2626; --red-bg: #fee2e2;
+  --gray: #6b7280; --gray-bg: #f3f4f6;
+  --radius: 10px;
+  --gap: 14px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.6; }
+.container { max-width: 1400px; margin: 0 auto; padding: var(--gap); }
+
+/* HEADER */
+.header { background: linear-gradient(135deg, var(--header-bg), var(--header2)); color: #fff; border-radius: var(--radius); padding: 20px 24px; margin-bottom: var(--gap); }
+.header h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.header p { font-size: 13px; opacity: 0.85; }
+.header-meta { display: flex; gap: 20px; margin-top: 12px; flex-wrap: wrap; }
+.header-meta span { font-size: 12px; opacity: 0.8; background: rgba(255,255,255,0.15); padding: 4px 10px; border-radius: 20px; }
+
+/* FILTERS */
+.filters-row { display: flex; gap: 10px; margin-bottom: var(--gap); flex-wrap: wrap; align-items: center; }
+.filter-group { display: flex; flex-direction: column; gap: 3px; }
+.filter-group label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+.filter-group select { padding: 7px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); font-size: 13px; color: var(--text); cursor: pointer; min-width: 160px; }
+.filter-group select:focus { outline: none; border-color: var(--header2); }
+.reset-btn { margin-top: 16px; padding: 7px 16px; background: var(--header-bg); color: #fff; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.reset-btn:hover { background: var(--header2); }
+
+/* KPI ROW */
+.kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--gap); margin-bottom: var(--gap); }
+.kpi-card { background: var(--card); border-radius: var(--radius); padding: 16px 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.07); border-left: 4px solid var(--header2); }
+.kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 6px; }
+.kpi-value { font-size: 26px; font-weight: 700; color: var(--text); }
+.kpi-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* VIEW TOGGLE */
+.view-toggle { display: flex; gap: 8px; margin-bottom: var(--gap); align-items: center; }
+.view-btn { padding: 7px 18px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); font-size: 13px; cursor: pointer; color: var(--muted); font-weight: 500; }
+.view-btn.active { background: var(--header-bg); color: #fff; border-color: var(--header-bg); }
+.view-label { font-size: 12px; color: var(--muted); margin-right: 4px; }
+
+/* COUNTRY CARDS GRID */
+#country-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: var(--gap); }
+
+.country-card { background: var(--card); border-radius: var(--radius); box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden; }
+.country-card-header { padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; border-bottom: 1px solid var(--border); }
+.country-card-header:hover { background: #f8f9fa; }
+.country-name { font-size: 16px; font-weight: 700; }
+.country-region { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.collapse-icon { font-size: 16px; color: var(--muted); transition: transform 0.2s; }
+.country-card.collapsed .collapse-icon { transform: rotate(-90deg); }
+.country-card-body { padding: 14px 18px; }
+.country-card.collapsed .country-card-body { display: none; }
+
+/* DISEASE TABS */
+.disease-tabs { display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
+.disease-tab { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1.5px solid transparent; }
+.disease-tab.oncho { background: var(--oncho-light); color: var(--oncho); border-color: var(--oncho); }
+.disease-tab.trachoma { background: var(--trachoma-light); color: var(--trachoma); border-color: var(--trachoma); }
+.disease-tab.sch { background: var(--sch-light); color: var(--sch); border-color: var(--sch); }
+.disease-tab.lf { background: var(--lf-light); color: var(--lf); border-color: var(--lf); }
+.disease-tab.cross { background: var(--cross-light); color: var(--cross); border-color: var(--cross); }
+.disease-tab.inactive { opacity: 0.35; border-color: var(--border); background: var(--gray-bg); color: var(--muted); }
+.disease-tab:not(.inactive):hover { opacity: 0.75; }
+
+/* DISEASE SECTIONS */
+.disease-section { margin-bottom: 14px; border-radius: 8px; overflow: hidden; }
+.disease-section-header { padding: 8px 14px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.disease-section.oncho .disease-section-header { background: var(--oncho-light); color: var(--oncho); }
+.disease-section.trachoma .disease-section-header { background: var(--trachoma-light); color: var(--trachoma); }
+.disease-section.sch .disease-section-header { background: var(--sch-light); color: var(--sch); }
+.disease-section.lf .disease-section-header { background: var(--lf-light); color: var(--lf); }
+.disease-section.cross .disease-section-header { background: var(--cross-light); color: var(--cross); }
+.disease-section-body { padding: 10px 14px; border: 1px solid var(--border); border-top: none; border-radius: 0 0 8px 8px; }
+
+/* FIELD ROWS */
+.field-row { margin-bottom: 8px; }
+.field-label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--muted); letter-spacing: 0.4px; margin-bottom: 2px; }
+.field-value { font-size: 13px; color: var(--text); line-height: 1.5; }
+
+/* STATUS BADGES */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge-green { background: var(--green-bg); color: var(--green); }
+.badge-yellow { background: var(--yellow-bg); color: var(--yellow); }
+.badge-red { background: var(--red-bg); color: var(--red); }
+.badge-gray { background: var(--gray-bg); color: var(--gray); }
+
+/* STATUS PILLS ROW */
+.status-pills { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+
+/* TABLE VIEW */
+#table-view { display: none; }
+.big-table-wrap { background: var(--card); border-radius: var(--radius); box-shadow: 0 1px 3px rgba(0,0,0,0.07); overflow-x: auto; margin-bottom: var(--gap); }
+.big-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.big-table th { padding: 10px 12px; text-align: left; border-bottom: 2px solid var(--border); color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; white-space: nowrap; background: #f8f9fa; }
+.big-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; max-width: 280px; }
+.big-table tr:hover td { background: #f8f9fa; }
+.big-table tr:last-child td { border-bottom: none; }
+.th-oncho { border-top: 3px solid var(--oncho); }
+.th-trachoma { border-top: 3px solid var(--trachoma); }
+.th-sch { border-top: 3px solid var(--sch); }
+.th-lf { border-top: 3px solid var(--lf); }
+.td-country { font-weight: 700; white-space: nowrap; }
+
+/* DETAIL VIEW (full-page country detail) */
+#detail-view { display: none; }
+.detail-back { display: inline-flex; align-items: center; gap: 6px; color: var(--header-bg); font-size: 13px; font-weight: 600; cursor: pointer; margin-bottom: 14px; padding: 6px 12px; background: var(--card); border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+.detail-back:hover { background: #f0f4f8; }
+.detail-country-header { background: linear-gradient(135deg, var(--header-bg), var(--header2)); color: #fff; border-radius: var(--radius); padding: 18px 24px; margin-bottom: var(--gap); }
+.detail-country-header h2 { font-size: 20px; font-weight: 700; }
+.detail-country-header p { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+.detail-section { background: var(--card); border-radius: var(--radius); box-shadow: 0 1px 3px rgba(0,0,0,0.07); margin-bottom: var(--gap); overflow: hidden; }
+.detail-section-title { padding: 12px 18px; font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.detail-section-title.oncho { background: var(--oncho-light); color: var(--oncho); border-bottom: 2px solid var(--oncho); }
+.detail-section-title.trachoma { background: var(--trachoma-light); color: var(--trachoma); border-bottom: 2px solid var(--trachoma); }
+.detail-section-title.sch { background: var(--sch-light); color: var(--sch); border-bottom: 2px solid var(--sch); }
+.detail-section-title.lf { background: var(--lf-light); color: var(--lf); border-bottom: 2px solid var(--lf); }
+.detail-section-title.cross { background: var(--cross-light); color: var(--cross); border-bottom: 2px solid var(--cross); }
+.detail-section-body { padding: 16px 18px; }
+.detail-field { margin-bottom: 14px; }
+.detail-field:last-child { margin-bottom: 0; }
+.detail-field-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 4px; }
+.detail-field-value { font-size: 13px; line-height: 1.6; }
+.interview-note { background: #fffde7; border-left: 3px solid #f59e0b; padding: 10px 14px; border-radius: 0 6px 6px 0; margin-top: 10px; font-size: 12px; line-height: 1.6; }
+.interview-note-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #92400e; margin-bottom: 4px; }
+
+/* EMPTY STATE */
+.empty-state { text-align: center; padding: 40px; color: var(--muted); font-size: 15px; background: var(--card); border-radius: var(--radius); }
+
+/* FOOTER */
+.footer { text-align: center; color: var(--muted); font-size: 12px; padding: 16px; }
+
+@media (max-width: 900px) {
+  #country-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+  <h1>🌍 NTD Mid-Term Review — Country Summary Report</h1>
+  <p>Neglected Tropical Diseases Programme | 2030 Roadmap Mid-Term Review (MTR)</p>
+  <div class="header-meta">
+    <span>📅 Data collected: March 2026</span>
+    <span>🗺️ 15 Countries</span>
+    <span>🕒 Last updated: 30 March 2026</span>
+    <span>🦠 4 Disease Areas: Onchocerciasis · Trachoma · SCH/STH · LF</span>
+    <span>📋 Source: Interview questions MTR country 1_1 (Responses).xlsx</span>
+  </div>
+</div>
+
+<!-- FILTERS -->
+<div class="filters-row">
+  <div class="filter-group">
+    <label>Country</label>
+    <select id="filter-country" onchange="applyFilters()">
+      <option value="all">All Countries</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>Disease Focus</label>
+    <select id="filter-disease" onchange="applyFilters()">
+      <option value="all">All Diseases</option>
+      <option value="oncho">Onchocerciasis</option>
+      <option value="trachoma">Trachoma</option>
+      <option value="sch">SCH / STH</option>
+      <option value="lf">Lymphatic Filariasis (LF)</option>
+    </select>
+  </div>
+  <div class="filter-group">
+    <label>OEM Status</label>
+    <select id="filter-oem" onchange="applyFilters()">
+      <option value="all">All</option>
+      <option value="complete">OEM Complete</option>
+      <option value="progress">OEM In Progress</option>
+      <option value="na">Not Applicable</option>
+    </select>
+  </div>
+  <button class="reset-btn" onclick="resetFilters()">↺ Reset</button>
+</div>
+
+<!-- KPI ROW -->
+<div class="kpi-row">
+  <div class="kpi-card">
+    <div class="kpi-label">Countries Reviewed</div>
+    <div class="kpi-value" id="kpi-total">15</div>
+    <div class="kpi-sub">Sub-Saharan Africa</div>
+  </div>
+  <div class="kpi-card" style="border-color:var(--oncho)">
+    <div class="kpi-label">OEM Complete</div>
+    <div class="kpi-value" id="kpi-oem-complete">7</div>
+    <div class="kpi-sub">of countries with oncho</div>
+  </div>
+  <div class="kpi-card" style="border-color:var(--trachoma)">
+    <div class="kpi-label">Trachoma Eliminated</div>
+    <div class="kpi-value" id="kpi-trachoma-elim">2</div>
+    <div class="kpi-sub">Ghana (2018), Senegal (2025)</div>
+  </div>
+  <div class="kpi-card" style="border-color:var(--sch)">
+    <div class="kpi-label">SCH Program Active</div>
+    <div class="kpi-value" id="kpi-sch-active">11</div>
+    <div class="kpi-sub">with MDA or surveillance</div>
+  </div>
+  <div class="kpi-card" style="border-color:var(--red)">
+    <div class="kpi-label">Funding Gaps Noted</div>
+    <div class="kpi-value" id="kpi-funding">10</div>
+    <div class="kpi-sub">countries flagging donor dependency</div>
+  </div>
+</div>
+
+
+<!-- VIEW TOGGLE -->
+<div class="view-toggle">
+  <span class="view-label">View:</span>
+  <button class="view-btn active" onclick="setView('cards')">🗃️ Country Cards</button>
+  <button class="view-btn" onclick="setView('table')">📊 Summary Table</button>
+</div>
+
+<!-- CARDS VIEW -->
+<div id="cards-view">
+  <div id="country-grid"></div>
+  <div id="empty-state" class="empty-state" style="display:none">No countries match the current filters.</div>
+</div>
+
+<!-- TABLE VIEW -->
+<div id="table-view">
+  <div class="big-table-wrap">
+    <table class="big-table" id="summary-table">
+      <thead>
+        <tr>
+          <th rowspan="2">Country</th>
+          <th colspan="3" class="th-oncho" style="color:var(--oncho)">🌿 Onchocerciasis</th>
+          <th colspan="3" class="th-trachoma" style="color:var(--trachoma)">👁️ Trachoma</th>
+          <th colspan="3" class="th-sch" style="color:var(--sch)">🔬 SCH / STH</th>
+          <th colspan="2" class="th-lf" style="color:var(--lf)">🦟 LF</th>
+          <th rowspan="2">Key Partners</th>
+        </tr>
+        <tr>
+          <th class="th-oncho">OEM Status</th>
+          <th class="th-oncho">STOP MDA</th>
+          <th class="th-oncho">Integration</th>
+          <th class="th-trachoma">TT Status</th>
+          <th class="th-trachoma">Surgery</th>
+          <th class="th-trachoma">Antibiotics</th>
+          <th class="th-sch">Workforce</th>
+          <th class="th-sch">PC Coverage</th>
+          <th class="th-sch">Supply Chain</th>
+          <th class="th-lf">Status</th>
+          <th class="th-lf">Summary</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- DETAIL VIEW -->
+<div id="detail-view">
+  <div class="detail-back" onclick="closeDetail()">← Back to country list</div>
+  <div id="detail-content"></div>
+</div>
+
+<div class="footer">NTD MTR 2026 · Data from <em>Interview questions MTR country 1_1 (Responses).xlsx</em> + MTR 1:1 interview summaries (20 documents, 15 countries) · Prepared March 2026</div>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+const COUNTRIES = [
+  {
+    id: "car", name: "Central African Republic (CAR)", region: "Central Africa",
+    oemStatus: "progress", oemNote: "In process; 6 of 15 health structures mapped. Financial and political challenges delay completion.",
+    stopMDA: "unknown", stopMDANote: "Cannot estimate; MDA interrupted in some districts; dependent on OEM completion and campaign planning.",
+    stopMDAYear: null,
+    oncho_integration: "Integration with door-to-door campaigns (malaria, polio) piloted in one region. Coordination and synchronized drug delivery needed.",
+    oncho_innovations: "Deeper integration with other health programs is seen as most innovative approach.",
+    oncho_priorities: "Complete OEM; improve campaign regularity; address financial and administrative barriers.",
+    oncho_labs: "Dependent on external labs for Oncho. LF requires different labs.",
+    oncho_partners: "CBM (funded by END Fund), ITI for Trachoma. No government funding for PC NTDs.",
+    tt_status: "endemic", tt_surgery: "Only 3–4 surgeons capable of TT surgery; data management issues.",
+    tt_management: "Operations only; limited surgeon capacity.",
+    tt_antibiotics: "Dispatching and reverse logistics issues with antibiotic distribution.",
+    tt_surveys: "Internal gaps; 5 districts not mapped.",
+    sch_workforce: "Voluntary workers; coverage needs improvement.",
+    sch_pc: "Coverage needs improvement; no structured community health platform.",
+    sch_supply: "Delays due to tax procedures; complex and lengthy administrative requests.",
+    sch_casemgt: "Insufficient PHC capacity; no praziquantel at primary health care level.",
+    sch_surveillance: "No impact assessment conducted.",
+    sch_data: "No data managers; no team available.",
+    sch_diagnostics: "No access to point-of-care diagnostics; no ELISA test access.",
+    sch_integration: "Integrated like Oncho; not isolated.",
+    sch_funding: "Advocacy ongoing towards Ministers. No dedicated domestic NTD budget.",
+    fin_sustainability: "CBM heavily impacted by USAID funding cut. RLMF funding enabled 9 districts. ITI and OPC also support.",
+    accel_actions: "Complete programmatic actions; address financial and administrative barriers.",
+    lf_status: "active",
+    lf_summary: "LF program relies on the same external partners as Oncho (CBM funded by END Fund). Labs for LF require different facilities than Oncho labs. No government domestic funding for LF or any PC-NTD interventions; all interventions come from partners.",
+    lf_integration: "LF and Oncho share the same partner structure. No structured integration with other health programs reported.",
+    lf_partners: "CBM funded by END Fund.",
+    lf_dataNote: "LF mentioned in lab and partner sections of survey; no dedicated LF questions in this survey instrument.",
+    interviewNote: "RCA meeting noted difficulty in campaign regularity; administrative issues with distribution; CBM impact from USAID cut highlighted.",
+    hasInterview: true
+  },
+  {
+    id: "ghana", name: "Ghana", region: "West Africa",
+    oemStatus: "complete", oemNote: "OEM fully completed including hypoendemic and non-endemic areas. Data partially submitted to ESPEN; full reporting needed.",
+    stopMDA: "2035", stopMDANote: "Target 2035 for full oncho elimination following successful STOP MDA processes in operational transmission zones.",
+    stopMDAYear: 2035,
+    oncho_integration: "Integrated FL/SCH/Oncho but couldn't cover all SCH endemic areas. Co-implementing with malaria bed net distribution.",
+    oncho_innovations: "Google location mapping for settlements; e-registration pilot in 10 health structures; moxidectin use in hot spots.",
+    oncho_priorities: "Proceed to STOP MDA; identify all hotspots; ensure quality MDA.",
+    oncho_labs: "National Public Health Reference Lab equipped for ELISA and qPCR with CDC support. Reagent procurement is the main challenge.",
+    oncho_partners: "Sightsavers through RLMF (full country coverage). Potential Dubai Foundation support.",
+    tt_status: "eliminated", tt_surgery: "Trachoma eliminated in 2018. Post-elimination surveillance ongoing.",
+    tt_management: "Post-elimination period; monitoring yearly reported cases.",
+    tt_antibiotics: "No current issues.",
+    tt_surveys: "Post-elimination surveillance; awaiting WHO validation documentation.",
+    sch_workforce: "Sufficient technical expertise at national level.",
+    sch_pc: "Pediatric praziquantel registration pending; SAC funding gap; expanding to school and community levels per WHO guidance.",
+    sch_supply: "No major supply chain challenges. Challenges with port handling charges and tax waivers for importing drugs.",
+    sch_casemgt: "Referral to district hospital; treatment manual developed; lack of colposcopes for FGS management.",
+    sch_surveillance: "64 districts assessed; additional assessments pending funding.",
+    sch_data: "Data managers and statistician available; no major issues.",
+    sch_diagnostics: "Kato–Katz for mansoni (no POC-CCA); filtration for haematobium. POC-CCA gap identified.",
+    sch_integration: "LF and Oncho integrated; SCH recently added. NTD into family healthcare common pool.",
+    sch_funding: "Integrated in health system; government applies for funding through NTD common pool.",
+    fin_sustainability: "All programs in common pool going to NTD family healthcare. Plans for sustaining existing programs.",
+    accel_actions: "Report mapping/innovation status to ESPEN portal; continue STOP MDA process; address reagent procurement gaps.",
+    lf_status: "integrated",
+    lf_summary: "Ghana is actively co-implementing LF MDA with Onchocerciasis and Schistosomiasis treatments to reduce costs. LF is fully integrated into Ghana Health Service policy alongside Oncho (and recently SCH). The program is managed at health system delivery level.",
+    lf_integration: "Co-implementing LF/Oncho/SCH MDA. Also planning integration with national malaria bed net distribution. LF integrated at program level since earlier than SCH.",
+    lf_partners: "Sightsavers through RLMF (full country coverage).",
+    lf_dataNote: "LF mentioned in integration and domestic funding sections of survey, and confirmed in interview summary.",
+    interviewNote: "Ghana confirmed trachoma elimination in 2018. ESPEN Collect difficulties noted — country developed own tools. Bed net integration for PZQ delayed by WHO supply issues. POC-CCA not used; Kato-Katz is standard.",
+    hasInterview: true
+  },
+  {
+    id: "congo", name: "Republic of Congo", region: "Central Africa",
+    oemStatus: "complete", oemNote: "OEM realized with ESPEN support. Results currently under discussion with scientific committee.",
+    stopMDA: "unknown", stopMDANote: "2030 not feasible due to co-endemic loa loa problem. No timeline can be provided.",
+    stopMDAYear: null,
+    oncho_integration: "Integration started, but limited. New 2026 partnership with OCEAC.",
+    oncho_innovations: "Data sharing; slash-and-clear; community engagement approaches.",
+    oncho_priorities: "Written response to be submitted. Address loase co-endemicity.",
+    oncho_labs: "No effective in-country system. Exclusively dependent on ESPEN lab. Works in isolation.",
+    oncho_partners: "ESPEN (only partner). Sightsavers supports MDA. No local partners.",
+    tt_status: "not_endemic", tt_surgery: "2015 suspected case in North; prevalence <5%; no public health approach warranted.",
+    tt_management: "Not applicable.",
+    tt_antibiotics: "Not applicable.",
+    tt_surveys: "Not applicable.",
+    sch_workforce: "Sufficient staff in number but inadequately trained. Training gaps in: planning, monitoring & evaluation, surveillance, and data analysis. Only basic training in detection, diagnosis and case management provided. Peripheral-level staff face task overload. MTN focal points exist in each endemic department.",
+    sch_pc: "School-based MDA strategy implemented since 2014 (12 years). Focus on ages 5–14. Close Health Ministry–Education Ministry partnership. Planning uses school enrollment data adjusted by census proportions. Only reaching school-age children — expansion to other at-risk populations needed.",
+    sch_supply: "Drugs arrive near expiry (3–4 months remaining shelf life). Longer-expiry drug batches needed. Praziquantel procurement challenges.",
+    sch_casemgt: "No training for case management. No rapid tests or Kato-Katz available at facilities. Kato-Katz used only for diagnostic purposes in specific contexts; no routine facility-level diagnostics.",
+    sch_surveillance: "No impact assessment since 2011 baseline mapping. WHO requested impact assessment before mapping update; no financing secured to date.",
+    sch_data: "Data management gaps; training in data analysis needed at all levels.",
+    sch_diagnostics: "Kato-Katz used only for initial diagnostics; no POC-CCA at health facilities. Diagnostic capacity severely limited.",
+    sch_integration: "SCH and STH programs are structurally separated in Congo — reported as globally unique. Advocacy ongoing to treat both together. Albendazole incorporated into SCH program as workaround.",
+    sch_funding: "Financed by WHO only. No national funding. SCH/STH separation creates administrative barriers.",
+    fin_sustainability: "No domestic funding; no sustainability mechanisms in place.",
+    accel_actions: "Advocate for integrating SCH and STH treatment. Secure impact assessment funding.",
+    lf_status: "no_data",
+    lf_summary: "No LF-specific information captured in this survey or interview.",
+    lf_integration: "Not reported.",
+    lf_partners: "Not reported.",
+    lf_dataNote: "LF not mentioned in Congo's survey responses or interview summary.",
+    interviewNote: "Congo SCH/STH program has 12 years of school-based implementation (since 2014) but faces a significant implementation-capacity gap: system design is sound but training in planning, M&E, surveillance, and data analysis is critically lacking. Peripheral-level staff are overburdened. Uniquely, SCH and STH are structurally separated — advocacy needed to combine treatments. Drug supply near-expiry is a persistent issue. No impact assessment since 2011. OEM and impact assessments conducted but not reported to WHO. Lab/surveillance entirely dependent on ESPEN and external partners.",
+    hasInterview: true
+  },
+  {
+    id: "ethiopia", name: "Ethiopia", region: "East Africa",
+    oemStatus: "progress", oemNote: "OEM priority; 3 conflict regions (Tigray and others) unmapped; 6 districts remaining. Target to complete in 2026 with TCC support.",
+    stopMDA: "2035", stopMDANote: "2035 per NOEC discussions.",
+    stopMDAYear: 2035,
+    oncho_integration: "Oncho MDA integrated with malaria in January 2026. Integration in place to save time and reduce costs. Cross-border collaboration with South Sudan.",
+    oncho_innovations: "Cross-border collaboration; population movement monitoring.",
+    oncho_priorities: "Cross-border collaboration with South Sudan; population movement management.",
+    oncho_labs: "One lab started PCR/ELISA in 2025 with TCC support. Shared workload from central lab. Light for the World and EMROID supporting regional labs.",
+    oncho_partners: "TCC (through to 2025); Light for the World (3 districts); Sight Savers in some areas.",
+    tt_status: "endemic", tt_surgery: "HEAD START accessible but training issues across sites. Cartridge production issue (single factory). Adequate trained personnel and funding.",
+    tt_management: "Epilation for minor TT; ophthalmologists and eye care centers for advanced cases. Clear protocol with algorithm in place.",
+    tt_antibiotics: "Pfizer supplying antibiotics. Main challenge is delay in production and supply from outside Ethiopia. Ethiopia bears 62% of global trachoma burden.",
+    tt_surveys: "Protocols in place; working with TT country teams; no reported problems with surveys.",
+    sch_workforce: "Trained workers at national and regional level. Insufficient capacity for active surveillance and data analysis.",
+    sch_pc: "School-based platform used for MDA delivery.",
+    sch_supply: "Impact and forecasting data available. Supply chain improvements needed; Ethiopia to document and share specific supply chain gaps.",
+    sch_casemgt: "No clear case management guidelines. Some projects with MoU. Plans to scale up in endemic districts.",
+    sch_diagnostics: "qPCR used; customs clearance delays.",
+    sch_integration: "Multisectoral platform in more districts. School health clubs for NTD incorporation.",
+    sch_funding: "Co-financing approach advocated; approaching Ministry of Finance and Health. WASH investment needs more advocacy.",
+    fin_sustainability: "Country ownership of domestic financing emphasized. Procurement accessibility for alternative diagnostics is key.",
+    accel_actions: "Security for conflict areas; alternative indicators for trachoma should be mandatory; domestic co-financing; WASH investment; vector control advocacy.",
+    lf_status: "no_data",
+    lf_summary: "No LF-specific information captured in this survey.",
+    lf_integration: "Not reported.",
+    lf_partners: "Not reported.",
+    lf_dataNote: "LF not mentioned in Ethiopia's survey responses.",
+    interviewNote: "Ethiopia highlighted that it carries 62% of global trachoma burden. Conflict-affected regions (Tigray and others) block OEM completion in 6 remaining districts. Serology/PCR called 'game-changers' for trachoma monitoring but WHO implementation guidelines still awaited. Oncho MDA integrated with malaria (Jan 2026). Cross-border collaboration with South Sudan is a priority. USAID funding cut is a significant challenge across all programs.",
+    hasInterview: true
+  },
+  {
+    id: "uganda", name: "Uganda", region: "East Africa",
+    oemStatus: "complete", oemNote: "OEM completed long ago. Nearly at elimination; cross-border transmission from South Sudan remains only obstacle.",
+    stopMDA: "near", stopMDANote: "Only 5 districts remaining (from 38). Guided by Uganda success expert advisory committee; waiting for NOEC advice on final stop.",
+    stopMDAYear: null,
+    oncho_integration: "Health workers trained; TCC received RLMF funds for integration. Limited integration due to few remaining districts. Still dependent on TCC.",
+    oncho_innovations: "Treating both host communities and South Sudanese refugees. Ivermectin administration at border reception centers. Vector control (river dosing).",
+    oncho_priorities: "Cross-border collaboration; strengthen South Sudan counterpart capacity; control blackflies through river dosing.",
+    oncho_labs: "Central lab with Carter Center support. Requesting reagents and diagnostic kits. TCC and Sightsavers are only international NTD partners.",
+    oncho_partners: "Carter Center (TCC), Sightsavers.",
+    tt_status: "endemic", tt_surgery: "~3,000 TT cases remaining. 40+ trained surgeons nationwide. No new surgeon training needed. Limited mannequins and training materials.",
+    tt_management: "Surgery only (no epilation offered). Repeated counseling for refusals; low refusal rates.",
+    tt_antibiotics: "No supply issues; requests bundled with MDA supplies.",
+    tt_surveys: "No issues reported. Minor supply delays for surveys.",
+    sch_workforce: "Sufficient for planning and MDA delivery. Gaps in data analysis, technical capacity, surveillance, and program monitoring.",
+    sch_pc: "National NTD program + district health teams. Adults at risk and pre-SAC not fully reached. Funding gap for community outreach.",
+    sch_supply: "All drugs via donation mechanisms. Challenges in forecasting, supply-program coordination, and last-mile distribution.",
+    sch_casemgt: "Decentralized system; community health workers + district level; national referral for complications. Case management mainly passive.",
+    sch_surveillance: "Routine monitoring at different levels. Lack of diagnostic tools at lower-level facilities. Hospitals at primary level lack diagnostics.",
+    sch_data: "Limited data granularity. Hotspot data at community level often missed. Inconsistent data collection.",
+    sch_diagnostics: "Microscopy gap. Innovative tools not integrated in routine system; used only in research.",
+    sch_integration: "Integrating MDA with integrated child health days (deworming, vaccination, Vit A). Unique challenge for each integration platform.",
+    sch_funding: "Advocacy at senior government level; investment cases made. SCH/STH not part of routine government budget line.",
+    fin_sustainability: "Decentralized health budgets at district level. Needs SOPs for integration, awareness raising, and NTD prioritization.",
+    accel_actions: "Cross-border oncho collaboration; awareness raising; NTD prioritization; SOPs for integration platforms.",
+    lf_status: "no_data",
+    lf_summary: "No LF-specific information captured in this survey or interview.",
+    lf_integration: "Not reported.",
+    lf_partners: "Not reported.",
+    lf_dataNote: "LF not mentioned in Uganda's survey responses or interview summary.",
+    interviewNote: "Uganda interview confirmed OEM completed. Only 5 districts with cross-border transmission from South Sudan remain. Key innovation is treating refugees at border reception. Trachoma surgery well accepted; ~3,000 cases remain. SCH/STH data analysis capacity is main gap. SCH/STH not in government budget.",
+    hasInterview: true
+  },
+  {
+    id: "mali", name: "Mali", region: "West Africa",
+    oemStatus: "complete", oemNote: "OEM completed with END Fund funding. No additional district mapping needed.",
+    stopMDA: "2026-2027", stopMDANote: "STOP MDA surveys ongoing (April 2026 expected). Serological tests underway. Full STOP MDA possible by end 2026 or 2027.",
+    stopMDAYear: 2027,
+    oncho_integration: "Activities remain vertical. Limited integration with other programs.",
+    oncho_innovations: "Alternative treatment planning based on decentralization. Social anthropological studies for community engagement. Scale-up to under-served villages.",
+    oncho_priorities: "Analyze reasons for insufficient coverage; define strategies to reach elimination; establish endpoint criteria.",
+    oncho_labs: "END Fund supported lab activities. Integrating lab work with other programs.",
+    oncho_partners: "END Fund; HKI (treatment); Sightsavers (coverage surveys).",
+    tt_status: "not_endemic", tt_surgery: "No trachoma.",
+    tt_management: "Not applicable.",
+    tt_antibiotics: "Not applicable.",
+    tt_surveys: "Not applicable.",
+    sch_workforce: "Over 95% of health agents involved and regularly trained. Strong PNLSH (Programme National de Lutte contre la Schistosomiase) expertise at national level. Training cascade: Regional trainers → District focal points → Community distributors.",
+    sch_pc: "SCH/STH fully integrated into health system. PNLSH has strong expertise in preventive chemotherapy (PC) planning, execution, and monitoring. High therapeutic coverage maintained. Multi-site distribution strategy implemented.",
+    sch_supply: "Forecasting and supply chain for praziquantel and albendazole needs improvement. Distribution to remote/marginalized populations remains a challenge.",
+    sch_casemgt: "Not specifically reported.",
+    sch_surveillance: "Surveillance ongoing; data analysis capacity is a key gap at program level.",
+    sch_data: "Data analysis bottleneck identified despite well-trained field personnel. Additional data analysis capacity needed at program level.",
+    sch_diagnostics: "Not specifically reported.",
+    sch_integration: "Decentralized multi-site distribution: schools, IDP sites, mining sites, and community groups. Innovative model reaches marginalized populations including internally displaced persons and mine workers.",
+    sch_funding: "Partnership with Ministry of Health and Education Ministry. USAID withdrawal in 2025 a significant challenge for program sustainability.",
+    fin_sustainability: "USAID funding withdrawal (2025) creates sustainability challenge. END Fund remains primary partner. LF and STH dossiers nearly ready for submission by end 2026.",
+    accel_actions: "Strengthen data analysis capacity; improve praziquantel/albendazole forecasting; LF and STH dossier submission by end of year.",
+    lf_status: "near_validation",
+    lf_summary: "Mali is approaching LF validation. The LF and STH dossiers are nearly ready for submission by end of 2026.",
+    lf_integration: "LF activities remain largely vertical, consistent with other NTD activities in Mali.",
+    lf_partners: "END Fund.",
+    lf_dataNote: "LF mentioned in acceleration actions section of survey.",
+    interviewNote: "Mali's SCH/STH program is well-structured with >95% health agent involvement and a strong PNLSH training cascade. An innovative decentralized distribution model reaches schools, IDP camps, and mining sites — addressing marginalized populations. Key gap: data analysis capacity despite strong field implementation. USAID withdrawal in 2025 is a critical sustainability challenge. LF and STH validation dossiers are nearly ready.",
+    hasInterview: true
+  },
+  {
+    id: "malawi", name: "Malawi", region: "Southern Africa",
+    oemStatus: "complete", oemNote: "OEM completed countrywide; 10 endemic districts identified. OEM funded by END Fund. Serology used for monitoring (first-line villages).",
+    stopMDA: "2030", stopMDANote: "One newly enrolled district will delay others. 7 of 10 districts foreseen to stop MDA by 2030.",
+    stopMDAYear: 2030,
+    oncho_integration: "CDDs used for Oncho at no additional cost. Training integrated with other programs. Includes SCH, Oncho, etc. in joint training.",
+    oncho_innovations: "Moxidectin to accelerate elimination. Slash-and-clear. Community awareness campaigns.",
+    oncho_priorities: "Introduce moxidectin; slash-and-clear; strengthen community awareness.",
+    oncho_labs: "One participant from last lab training. Mostly partner-funded; government contributes small resources to complement.",
+    oncho_partners: "END Fund; Sightsavers; WHO; MDP; TSS (local partner for MDA).",
+    tt_status: "not_endemic", tt_surgery: "Not applicable.",
+    tt_management: "Not applicable.",
+    tt_antibiotics: "Not applicable.",
+    tt_surveys: "Not applicable.",
+    sch_workforce: "Insufficient; biggest intervention is MDA; current partner deployed to support. Lacks embedded analytical and surveillance capacity.",
+    sch_pc: "MDA well covered but gaps in snail control, implementation research, surveillance, and data analysis. Remote sensing and data tools needed.",
+    sch_supply: "System adequate; not entirely dependent on actions. Supply chain driven by post-treatment reports and estimations.",
+    sch_casemgt: "Not actively detecting complicated schisto cases. FGS training manual being integrated into family planning and youth health platforms.",
+    sch_surveillance: "Capacity for impact assessment using hybrid approaches with external expertise. Need to transfer expertise to local system.",
+    sch_diagnostics: "Kato-Katz and POC-CCA (new tool). Data still being processed and reported to ESPEN. Unlimit Health is partner for data collection.",
+    sch_integration: "Not reported specifically.",
+    sch_funding: "Large gaps for schisto; health workers not trained to recognize complications; most facilities lack drugs; schisto not well prioritized.",
+    fin_sustainability: "Study on Malawi population views on post-donor phase-out underway. Challenges include SCH/STH data inclusion in national plans.",
+    accel_actions: "Moxidectin for Oncho; complete POC-CCA data reporting to ESPEN; train health workers on schisto complications; improve domestic financing.",
+    lf_status: "post_validation",
+    lf_summary: "Malawi has passed LF validation and is in a post-validation surveillance phase. A small GLIDE grant supports LF activities. ESPEN will support Malawi with limited resources on LF surveillance methodology. An April workshop is planned to address post-validation surveillance.",
+    lf_integration: "LF activities small-scale; need WHO guidance on post-validation surveillance approach.",
+    lf_partners: "GLIDE (small grant); ESPEN (technical support for surveillance workshop).",
+    lf_dataNote: "LF mentioned in financial sustainability section of survey.",
+    interviewNote: "Malawi is post-LF validation and planning post-validation surveillance (April workshop with ESPEN support). Moxidectin being introduced for Oncho to accelerate elimination. POC-CCA data being processed for ESPEN reporting. FGS training manual integrated into family planning and youth health platforms. Domestic financing study underway examining public views post-donor phase-out. 7 of 10 Oncho-endemic districts expected to stop MDA by 2030.",
+    hasInterview: true
+  },
+  {
+    id: "equatorial_guinea", name: "Equatorial Guinea", region: "Central Africa",
+    oemStatus: "partial", oemNote: "Oncho eliminated in Bioko Island. Mainland status uncertain — unclear whether active transmission exists.",
+    stopMDA: "unknown", stopMDANote: "Not reported for mainland.",
+    stopMDAYear: null,
+    oncho_integration: "Not reported.",
+    oncho_innovations: "Not reported.",
+    oncho_priorities: "Clarify mainland transmission status.",
+    oncho_labs: "Not reported.",
+    oncho_partners: "Not reported.",
+    tt_status: "not_endemic", tt_surgery: "No trachoma.",
+    tt_management: "Not applicable.",
+    tt_antibiotics: "Not applicable.",
+    tt_surveys: "Not applicable.",
+    sch_workforce: "Only one albendazole distribution since 2023 due to lack of funding. No structured school integration.",
+    sch_pc: "Since 2023 drugs managed via Centramed then WHO → Ministry. Only occasional school integration.",
+    sch_supply: "Centralized supply management through Centramed; supply chain managed centrally.",
+    sch_casemgt: "SCH case management passive; specimens sent to lab but patients often don't collect prescriptions.",
+    sch_surveillance: "Not reported.",
+    sch_data: "Data managers exist but training uncertain; simple Excel-based tracking system.",
+    sch_diagnostics: "Fresh urine sedimentation microscopy; Kato-Katz; rapid test CCA used.",
+    sch_integration: "HAT, LF, Oncho more developed. SCH more passive.",
+    sch_funding: "Not well defined. Excel-based case notification system in place.",
+    fin_sustainability: "To be communicated by email.",
+    accel_actions: "To be communicated by email.",
+    lf_status: "active",
+    lf_summary: "LF is among the more developed NTD programs in Equatorial Guinea alongside Oncho, STH, and HAT. SCH is more passive by comparison. No structured integration with school programs.",
+    lf_integration: "LF handled alongside Oncho and HAT. No structured school integration for LF.",
+    lf_partners: "Drugs via WHO → Ministry channel (Centramed manages supply chain).",
+    lf_dataNote: "LF mentioned in case management section of survey as one of the more involved programs.",
+    interviewNote: "Oncho eliminated on Bioko Island; mainland transmission status remains unclear. HAT, LF, and Oncho are the more developed NTD programs; SCH is more passive. Only one ALB distribution conducted since 2023 due to funding gaps. Supply chain centralized through Centramed. Patients sent for lab testing often do not collect prescriptions — a case management adherence challenge.",
+    hasInterview: true
+  },
+  {
+    id: "tanzania", name: "Tanzania", region: "East Africa",
+    oemStatus: "near_complete", oemNote: "OEM completed except 2 units (2019–2020 start). These 2 units already received 5 MDA rounds; OEM planned.",
+    stopMDA: "2033", stopMDANote: "By 2033 full STOP MDA expected. Two remaining units may need OEM first. NOEC recommended biannual MDA to accelerate.",
+    stopMDAYear: 2033,
+    oncho_integration: "Community health worker (CHW) and Community Directed Distributor (CDD) training integrated countrywide. eLMIS-based unified drug procurement for Oncho + LF. CHWs trained for co-delivery of multiple NTD drugs in single campaign. National NTD model includes oncho. Shifting to digital DHIS2/EPIRF reporting.",
+    oncho_innovations: "eLMIS electronic logistics system for unified procurement. Digital/evidence-based reporting via DHIS2 and EPIRF. Biannual MDA in hotspots. Test-and-treat approach in hotspots. 5-yearly sentinel site monitoring.",
+    oncho_priorities: "Increase MDA frequency (annual to biannual); test-and-treat in hotspots; enhance data quality.",
+    oncho_labs: "Not integrated in routine system. Surveillance activities still vertical and partner-dependent. NEMRI lab and technical staff used.",
+    oncho_partners: "END Fund via RLMF; WHO technical support; NEMRI lab.",
+    tt_status: "endemic", tt_surgery: "4 HEAD STARTs operational; 4 more needed. Universities and Mwumi eye specialists involved.",
+    tt_management: "Surgery (primary); epilation for specific minor cases or refusals; patient support systems in place.",
+    tt_antibiotics: "No supply chain issues. Medicines received from ITI.",
+    tt_surveys: "Standardized methods used; results shared. WHO training received.",
+    sch_workforce: "2 dedicated program staff; no dedicated district-level SCH/STH staff. NTD coordinators in health departments.",
+    sch_pc: "Effective system in place; cascade meetings from national to district level. SAC treatment with plans to expand. DHIS2 integration ongoing.",
+    sch_supply: "ALB: no major issues. PZQ: JAP approval delayed; addressing via DHIS2 supply tracking. Improving forecasting.",
+    sch_casemgt: "Clinical pathway from dispensary to referral. Morbidity management integrated in primary health services.",
+    sch_surveillance: "Periodic impact assessments conducted. Routine monitoring not fully established. Focus on integration.",
+    sch_data: "No major challenges for STH data. Overall program successfully implemented.",
+    sch_diagnostics: "Kato-Katz standard. POC-CCA available but decentralization needed; training required at district level.",
+    sch_integration: "Comprehensive SCH/STH strategy developed. Integration into primary health care and CCHP (Council Comprehensive Health Plans).",
+    sch_funding: "Government plans for domestic funding; SCH/STH included in council planning. Mandatory in CCHP — captured in government budget.",
+    fin_sustainability: "NTD mainstreamed into council planning (CCHP). Direct health facility financing. Domestic revenue mechanisms in place.",
+    accel_actions: "Precision mapping and micro-stratification; one-health integration with WASH; invest in POC-CCA decentralization; morbidity integration.",
+    lf_status: "near_elimination",
+    lf_summary: "Tanzania LF program is targeting STOP MDA by 2028. Mapping is complete and CHWs/CDDs are trained to distribute LF drugs during Onchocerciasis MDA rounds — enabling highly efficient co-delivery. Drug procurement for both Oncho and LF is unified through eLMIS, reducing administrative burden and supply chain fragmentation.",
+    lf_integration: "Advanced integration: CHWs and CDDs trained for dual LF+Oncho distribution. eLMIS unified procurement system processes drug requests for both programs together. LF mainstreamed into Council Comprehensive Health Plans (CCHP) and government budget.",
+    lf_partners: "END Fund via RLMF; WHO technical support.",
+    lf_dataNote: "LF covered in detail in updated 2026 interview responses; includes explicit STOP MDA target and eLMIS integration.",
+    interviewNote: "Tanzania's updated interview reveals the most advanced NTD integration model in the cohort. eLMIS now handles unified drug procurement for Oncho + LF. CHWs and CDDs are cross-trained for co-delivery of ivermectin and LF drugs in a single campaign. LF STOP MDA target is 2028. Oncho STOP MDA remains 2033 (12-year cycle for recent 2025 starters). Domestic funding reached 25%+ of NTD program costs — mainstreamed via CCHP. Trachoma program uses 4 HEAD START devices with 4 more needed. 5-yearly sentinel site monitoring for Oncho reported via EPIRF.",
+    hasInterview: true
+  },
+  {
+    id: "senegal", name: "Senegal", region: "West Africa",
+    oemStatus: "na", oemNote: "Post-STOP surveillance. Impact assessment in 2022 done and results sent to ESPEN.",
+    stopMDA: "completed", stopMDANote: "Post-STOP MDA phase. JAP 2025 validated by WHO/OMS. Currently in surveillance phase.",
+    stopMDAYear: null,
+    oncho_integration: "Not applicable (post-MDA).",
+    oncho_innovations: "2026 co-financing of Oncho activities between Senegal (25,000 USD) and END Fund for microplanning and fly collection.",
+    oncho_priorities: "Border surveillance with Guinea, Guinea-Bissau, and Mali. Entomological surveys in frontier zones. April 2026 fly collection planned.",
+    oncho_labs: "Formed in serology, rapid tests, OV16, TDR IgG4. Entomologists trained by Daniel Boakye. Flies analyzed in ESPEN Ouagadougou. Senegal seeking to send 2 technicians to ESPEN.",
+    oncho_partners: "END Fund.",
+    tt_status: "eliminated_2025", tt_surgery: "WHO validation of trachoma elimination achieved July 2025. 80+ eye care facilities operational nationwide. HEAD START mannequins (3 available) for TT surgery training; constrained by cartridge/artificial eyelid supplies.",
+    tt_management: "Transitioned to post-validation surveillance phase. Integrated passive and active surveillance approaches. TT management embedded in medical training curriculum. Community-based management maintained for sustainability.",
+    tt_antibiotics: "Post-validation phase — no active MDA distribution. Supply availability for residual cases monitored.",
+    tt_surveys: "Post-validation surveillance plan in place. Surveillance integrated into routine health systems at operational to central level with community engagement.",
+    sch_workforce: "Not reported.",
+    sch_pc: "Not reported.",
+    sch_supply: "Not reported.",
+    sch_casemgt: "Not reported.",
+    sch_surveillance: "Not reported.",
+    sch_data: "Not reported.",
+    sch_diagnostics: "Not reported.",
+    sch_integration: "Not reported.",
+    sch_funding: "Not reported.",
+    fin_sustainability: "2026 co-financing of Oncho activities: Senegal contributing 25,000 USD alongside END Fund for microplanning and fly collection — demonstrating growing domestic ownership.",
+    accel_actions: "Entomological surveillance at borders (Guinea, Guinea-Bissau, Mali); maintain post-validation trachoma surveillance; share April 2026 fly collection results with ESPEN.",
+    lf_status: "no_data",
+    lf_summary: "No LF-specific information captured in this survey.",
+    lf_integration: "Not reported.",
+    lf_partners: "Not reported.",
+    lf_dataNote: "LF not mentioned in Senegal's survey responses.",
+    interviewNote: "MILESTONE: Senegal achieved WHO validation of trachoma elimination as a public health problem in July 2025 — a landmark achievement. Post-validation surveillance now in place using integrated passive and active approaches. TT surgery training uses HEAD START mannequins (3 available) but cartridge supplies are constrained. Senegal is also demonstrating growing domestic ownership for Oncho through a 25,000 USD co-financing contribution in 2026.",
+    hasInterview: true
+  },
+  {
+    id: "ivory_coast", name: "Ivory Coast", region: "West Africa",
+    oemStatus: "progress", oemNote: "OEM phases (documentary review and re-mapping) could not be implemented due to lack of funding in 2025. Planned for 2027.",
+    stopMDA: "unknown", stopMDANote: "Difficult to forecast. New orientations expected end of April/early May 2026 pending NOEC.",
+    stopMDAYear: null,
+    oncho_integration: "Integration of SCH into Oncho campaigns. Joint training and awareness. Potential integration with malaria and other programs being planned.",
+    oncho_innovations: "Climate change and vector-borne disease considerations. Exploring alternatives to long-term treatment with NOEC.",
+    oncho_priorities: "Await NOEC guidance; identify stable endpoint criteria.",
+    oncho_labs: "HSS activities: identifying labs and actors. Process launched to build sustainable national lab capacity as partner exits.",
+    oncho_partners: "Not fully specified; government provides minimal lab funding.",
+    tt_status: "not_endemic", tt_surgery: "Not endemic. 4 surgeons trained as precaution. One focal point sufficient.",
+    tt_management: "Surgery or epilation; epilation offered if patient declines surgery.",
+    tt_antibiotics: "No antibiotic distribution since 2015–2022 period.",
+    tt_surveys: "Surveillance survey done in 2025. Dossier planned for ESPEN by end of year.",
+    sch_workforce: "Sufficient trained staff at all levels.",
+    sch_pc: "Risk group identification in place. All districts implement MDA where needed. Daily coordination meetings.",
+    sch_supply: "Not specifically reported.",
+    sch_casemgt: "Not integrated.",
+    sch_surveillance: "Not reported.",
+    sch_data: "Not reported.",
+    sch_diagnostics: "Not reported.",
+    sch_integration: "Parallel vertical programs. Piloting skin NTDs on school health platforms — seen as path to sustainable integration.",
+    sch_funding: "Not reported.",
+    fin_sustainability: "Not reported.",
+    accel_actions: "Cross-sector integration; resource mobilization at all levels.",
+    lf_status: "active",
+    lf_summary: "9 districts in Ivory Coast were previously treated for LF and are included in the OEM planning context (those treated for LF but not Oncho needed separate consideration). Integration of LF with other NTD campaigns is being explored.",
+    lf_integration: "Integration of LF with Oncho and SCH campaigns being planned. School health platforms identified as a potential sustainable integration mechanism.",
+    lf_partners: "Not specified.",
+    lf_dataNote: "LF mentioned in OEM section of survey (districts treated for LF flagged for separate mapping consideration).",
+    interviewNote: "OEM phases (documentary review and re-mapping) halted in 2025 due to lack of funding; rescheduled for 2027. Nine LF districts require separate OEM consideration from Oncho-endemic areas. NOEC guidance awaited (end April/May 2026) on STOP MDA endpoint criteria. Climate change and vector-borne disease considerations being incorporated. School health platforms identified as the path to sustainable NTD integration. Trachoma not endemic but 4 surgeons trained as precaution.",
+    hasInterview: true
+  },
+  {
+    id: "cameroon", name: "Cameroon", region: "Central Africa",
+    oemStatus: "progress", oemNote: "Mapping completed in 2011. New hyperendemic districts started in North, Littoral, and East regions in 2024. USAID funding cut has halted progress.",
+    stopMDA: "unknown", stopMDANote: "Loa loa co-endemicity makes STOP MDA timeline difficult. 14 districts have seroprevalence >5%. RAPLOA mapping done; loascope under consideration.",
+    stopMDAYear: null,
+    oncho_integration: "Pilot with polio in early 2026 (still with some costs). Parasitage integration opportunity. Evidence-based integration approach needed.",
+    oncho_innovations: "Biannual ivermectin in 6 pilot hotspot districts. Moxidectin experimentation needed. Loascope for loa screening.",
+    oncho_priorities: "Address funding gap (estimated 15 MUSD/year; MDP signed for 6 MUSD). Secure support to fill 3–4 billion CFA francs gap from USAID withdrawal.",
+    oncho_labs: "OV16 reagents not always available. National lab can do analysis but not involved in impact assessments. Cascade training needed.",
+    oncho_partners: "MDP (6 MUSD signed). Serious funding gap after USAID. Capacity building needed for labs.",
+    tt_status: "endemic", tt_surgery: "Large TT backlog (trichiasis). Limited new surgeon training. Existing surgeons trained via HEAD START and master trainers.",
+    tt_management: "Surgery through HEAD START trained surgeons and master trainers. Epilation offered.",
+    tt_antibiotics: "3 health districts under borderline surveillance. Impact assessments since 2019 showed no new cases in other districts.",
+    tt_surveys: "Data randomly collected. Last survey poorly coordinated. Consumables nearing expiry. Centre Pasteur involved. USAID funding withdrawal impacting.",
+    sch_workforce: "National staff and one regional coordinator; not sufficiently trained.",
+    sch_pc: "Not fully reported.",
+    sch_supply: "Not reported.",
+    sch_casemgt: "Pilot projects for FGS monitoring. Morbidity not well accounted for. Needs more human capacity.",
+    sch_surveillance: "Not reported.",
+    sch_data: "Not reported.",
+    sch_diagnostics: "Not reported.",
+    sch_integration: "Not reported.",
+    sch_funding: "Not reported.",
+    fin_sustainability: "Serious funding gap after USAID cut. 15 MUSD/year estimated; only 6 MUSD secured through MDP.",
+    accel_actions: "Secure funding to replace USAID gap; loascope scale-up; biannual MDA in hotspots; moxidectin experimentation.",
+    lf_status: "no_data",
+    lf_summary: "No LF-specific information captured in this survey.",
+    lf_integration: "Not reported.",
+    lf_partners: "Not reported.",
+    lf_dataNote: "LF not mentioned in Cameroon's survey responses.",
+    interviewNote: "Cameroon faces a severe funding crisis after USAID withdrawal — estimated 15 MUSD/year needed; only 6 MUSD secured via MDP. Loa loa co-endemicity remains a major barrier to STOP MDA planning (14 districts with seroprevalence >5%). Biannual ivermectin piloted in 6 hotspot districts. Loascope under consideration for loa screening. Trachoma has a large TT backlog. USAID cut also impacting survey consumables and trachoma activities.",
+    hasInterview: true
+  },
+  {
+    id: "liberia", name: "Liberia", region: "West Africa",
+    oemStatus: "incomplete", oemNote: "REMO completed. OEM needed but can only be conducted when funding available. Endemicity uncertain in some areas.",
+    stopMDA: "2030", stopMDANote: "Target 2030. MDA covers nearly all 15 counties. Pre-stop assessment training needed.",
+    stopMDAYear: 2030,
+    oncho_integration: "NTD awareness at Ministry of Health level. Training difficult to integrate with other programs.",
+    oncho_innovations: "Comprehensive MDA coverage across 15 counties. Pre-stop assessment scale-up needed.",
+    oncho_priorities: "Train lab workers for oncho; training for pre-stop assessment; advocacy at Ministry level.",
+    oncho_labs: "Diagnostics procurement supported by Sightsavers. Reference lab in-country. 50% of oncho lab training done in Ghana.",
+    oncho_partners: "Sightsavers; government of Liberia starting to contribute.",
+    tt_status: "na", tt_surgery: "Not applicable.",
+    tt_management: "Not applicable.",
+    tt_antibiotics: "Not applicable.",
+    tt_surveys: "Not applicable.",
+    sch_workforce: "Trained personnel exist but not for MDA. No capacity in impact survey and data analysis.",
+    sch_pc: "Annual plan based on National NTD Master Plan. Serious gap: no SCH funding in Liberia. MDA activities unfunded.",
+    sch_supply: "PZQ requested from WHO. PZQ only available for SAC but adults also at risk in endemic counties.",
+    sch_casemgt: "Limited skills. Research in 2 districts only. Need to expand to all endemic counties.",
+    sch_surveillance: "No funding for surveillance and monitoring.",
+    sch_data: "No impact survey since 2022.",
+    sch_diagnostics: "Microscope only; no serological tests or PCR. No partner support for diagnostics tools.",
+    sch_integration: "MDA integrated with Oncho and LF. Supervision not always possible.",
+    sch_funding: "20,000 USD from government for NTD activities in 2026. No domestic financing mechanisms.",
+    fin_sustainability: "Advocacy to government and Parliament based on disease burden.",
+    accel_actions: "Pre-stop assessment for Oncho; MMDP activities; train health workers; revise Master Plan; ensure MDA reaches all endemic communities.",
+    lf_status: "active",
+    lf_summary: "LF MDA is integrated with Oncho MDA in Liberia. Awareness, training, and health education for LF are combined with Oncho and other NTD campaigns, though supervision has not always been possible.",
+    lf_integration: "MDA integrated with Oncho and LF. Awareness and training combined. Government of Liberia starting to contribute to NTD activities broadly.",
+    lf_partners: "Sightsavers; government of Liberia (beginning to contribute).",
+    lf_dataNote: "LF mentioned in integration and sustainability section of survey.",
+    interviewNote: "REMO completed but full OEM still pending funding. Target STOP MDA 2030 covering nearly all 15 counties. Pre-stop assessment training is the critical next step. LF MDA co-delivered with Oncho — combined awareness and supervision. SCH/STH has no domestic funding and no dedicated partner; serious gap. Government beginning to contribute (20,000 USD in 2026 for NTD activities). 50% of Oncho lab training conducted in Ghana. Trachoma not applicable.",
+    hasInterview: true
+  },
+  {
+    id: "kenya", name: "Kenya", region: "East Africa",
+    oemStatus: "na", oemNote: "Oncho historically near-eliminated through vector control in colonial era. No MDA ever conducted. Working on elimination dossier.",
+    stopMDA: "na", stopMDANote: "Not applicable — no active MDA program.",
+    stopMDAYear: null,
+    oncho_integration: "Leveraging primary health care infrastructure for surveillance and case referral.",
+    oncho_innovations: "Community-based surveillance for vector observation and case referral. Building on primary health care.",
+    oncho_priorities: "Entomological and human epi surveys. Dossier development alongside surveillance to fast-track elimination target.",
+    oncho_labs: "Majority of NTD surveillance relies on donations. Limited access to diagnostics. Rapid diagnostic test for Oncho supported by END Fund (ARISE 2) through African Institute for Health and Development.",
+    oncho_partners: "END Fund (ARISE 2) via African Institute for Health and Development. MoH for awareness.",
+    tt_status: "near_php", tt_surgery: "Multiple master trainers for TT surgery. Training within established protocols. Reached TT public health threshold (PHP).",
+    tt_management: "Cleared trachoma to PHP. Geographical mapping of residual TT cases. Surgical operations at identified sites.",
+    tt_antibiotics: "Relies on Pfizer/ITI supply. Previous MoU challenges (3-year MoU gaps); new 5-year MoU in place. Antibiotic distribution from sub-county to community level.",
+    tt_surveys: "No major issues.",
+    sch_workforce: "Operating at national and sub-national level. SCH/STH manager at national level. Master trainers cascade to county and sub-county. Program works with other NTDs.",
+    sch_pc: "Effective; master trainer cascade from national to community drug distributor supervisors. SAC focus. Integrating community adults (piloting).",
+    sch_supply: "Forecasting challenges due to prevalence-based methodology and limited burden data. Complex supply management for large country.",
+    sch_casemgt: "Not yet strong. Piloting referral pathway for urogenital SCH complications in 2 counties. Pelvic examinations included in pilot.",
+    sch_surveillance: "Routine monitoring is a challenge. Kato-Katz not used routinely in health facilities. New system being put in place.",
+    sch_data: "SAC data collection strong. Adult data collection challenging. Scientific analysis is a gap.",
+    sch_diagnostics: "POC included for STH. No current POC tool for SCH.",
+    sch_integration: "Piloting integration within primary health care network in 15 counties. Transitioning from campaign-based MDA to routine health activities. Schools covered.",
+    sch_funding: "National and county level advocacy. County assemblies for mobilization. 4 duties defined at national MoU level.",
+    fin_sustainability: "Elimination goals: LF by 2028; Trachoma by 2029; HAT validated 2025. Deliberate domestic financing strategy in place.",
+    accel_actions: "Deliberate elimination timeline (LF 2028; Trachoma 2029; Oncho dossier). Expand SCH pilot counties. Integrate routine diagnostics.",
+    lf_status: "near_elimination",
+    lf_summary: "Kenya has a deliberate LF elimination goal of 2028. LF financing is being advocated at both national MoU level and county assembly level. Domestic financing mechanisms are in place as part of Kenya's broader elimination agenda (HAT validated 2025; LF 2028; Trachoma 2029).",
+    lf_integration: "Piloting NTD integration within primary health care network in 15 counties. LF included in elimination timeline alongside Trachoma and Oncho.",
+    lf_partners: "END Fund (ARISE 2) via African Institute for Health and Development; MoH.",
+    lf_dataNote: "LF mentioned in acceleration actions and financial sustainability sections of survey.",
+    interviewNote: "Kenya has a deliberate multi-disease elimination timeline: HAT validated 2025, LF elimination target 2028, Trachoma 2029. Oncho historically near-eliminated via colonial-era vector control — working on elimination dossier. NTD integration being piloted within primary health care in 15 counties, transitioning from vertical campaigns to routine delivery. SCH/STH adult data collection is a challenge. FGS pilot referral pathway underway in 2 counties. Domestic financing strategy in place.",
+    hasInterview: true
+  }  ,
+  {
+    id: "mozambique", name: "Mozambique", region: "Southern Africa",
+    oemStatus: "progress", oemNote: "92 districts still unmapped. Primary barrier is cut in external funding. Timeline uncertain; depends on funding availability.",
+    stopMDA: "unknown", stopMDANote: "Cannot estimate; OEM not yet complete. MDA ongoing in Zambezia and Niassa provinces integrated with malaria campaigns.",
+    stopMDAYear: null,
+    oncho_integration: "Onchocerciasis MDA integrated with malaria campaigns (ITN distribution) in Zambezia and Niassa provinces. Parallel vector control measures proposed for blackfly breeding in high-risk areas.",
+    oncho_innovations: "Novel platform: using malaria bed-net campaigns as delivery vehicle for oncho MDAs. Vector control focus: blackfly-specific interventions proposed as parallel strategy.",
+    oncho_priorities: "Complete OEM (92 districts remaining); secure external funding; sustain malaria-oncho MDA integration.",
+    oncho_labs: "Dependent on external support. Limited domestic laboratory capacity reported.",
+    oncho_partners: "DNSP (National Health Service); WHO (coordination); Malaria Program (platform sharing).",
+    tt_status: "endemic", tt_surgery: "Active trachoma program. Surgical capacity development ongoing.",
+    tt_management: "Program activities ongoing; details not specified in available responses.",
+    tt_antibiotics: "Program activities ongoing; details not specified.",
+    tt_surveys: "Surveys underway; data not yet reported.",
+    sch_workforce: "Program active; capacity details not fully reported.",
+    sch_pc: "MDA activities ongoing; integration approach not fully detailed.",
+    sch_supply: "Supply chain details not fully reported.",
+    sch_casemgt: "Not specifically reported.",
+    sch_surveillance: "Not specifically reported.",
+    sch_data: "Limited surveillance and data capacity reported.",
+    sch_diagnostics: "Not specifically reported.",
+    sch_integration: "Not specifically reported.",
+    sch_funding: "Dependent on external funding; no dedicated domestic NTD budget reported.",
+    fin_sustainability: "External funding cuts are the primary barrier to progress. Government through DNSP manages activities; partner dependency high.",
+    accel_actions: "Secure external funding to complete OEM; sustain malaria-oncho campaign integration; develop vector control proposal for blackfly breeding sites.",
+    lf_status: "active",
+    lf_summary: "LF program active through national health system (DNSP). No dedicated LF-specific data captured; program information incorporated within national NTD framework.",
+    lf_integration: "LF managed through DNSP alongside other NTD programs. Integration with malaria platform may also benefit LF delivery.",
+    lf_partners: "DNSP; WHO.",
+    lf_dataNote: "LF mentioned within national NTD program context; no dedicated LF questions in available interview responses.",
+    interviewNote: "Mozambique is a new addition to the MTR not represented in the baseline survey. Key finding: 92 districts remain unmapped for OEM due to funding cuts. Innovative approach: malaria ITN campaigns used as platform for oncho MDA in Zambezia and Niassa. Vector control for blackfly breeding proposed as novel parallel intervention. External funding dependency is the critical barrier.",
+    hasInterview: true
+  }
+];
+
+// Status labels and helpers
+function oemBadge(status) {
+  const map = {
+    complete: '<span class="badge badge-green">✓ Complete</span>',
+    near_complete: '<span class="badge badge-green">≈ Near Complete</span>',
+    progress: '<span class="badge badge-yellow">⟳ In Progress</span>',
+    partial: '<span class="badge badge-yellow">◑ Partial</span>',
+    incomplete: '<span class="badge badge-red">✗ Incomplete</span>',
+    na: '<span class="badge badge-gray">— N/A</span>'
+  };
+  return map[status] || '<span class="badge badge-gray">Unknown</span>';
+}
+
+function lfBadge(status) {
+  const map = {
+    active: '<span class="badge badge-yellow">⟳ Active</span>',
+    integrated: '<span class="badge badge-green">✓ Integrated</span>',
+    near_elimination: '<span class="badge badge-green">≈ Near Elimination (2028)</span>',
+    near_validation: '<span class="badge badge-yellow">≈ Near Validation</span>',
+    post_validation: '<span class="badge badge-green">✓ Post-Validation</span>',
+    no_data: '<span class="badge badge-gray">— No data captured</span>'
+  };
+  return map[status] || '<span class="badge badge-gray">Unknown</span>';
+}
+
+function ttBadge(status) {
+  const map = {
+    endemic: '<span class="badge badge-yellow">⚠ Endemic</span>',
+    eliminated: '<span class="badge badge-green">✓ Eliminated 2018</span>',
+    eliminated_2025: '<span class="badge badge-green">✓ Eliminated 2025</span>',
+    not_endemic: '<span class="badge badge-gray">— Not Endemic</span>',
+    near_php: '<span class="badge badge-green">≈ Near PHP</span>',
+    na: '<span class="badge badge-gray">— N/A</span>'
+  };
+  return map[status] || '<span class="badge badge-gray">Unknown</span>';
+}
+
+function stopMDABadge(s) {
+  if (s === 'completed') return '<span class="badge badge-green">✓ Completed</span>';
+  if (s === 'near') return '<span class="badge badge-green">≈ Nearly Done</span>';
+  if (s === 'na') return '<span class="badge badge-gray">— N/A</span>';
+  if (s === 'unknown') return '<span class="badge badge-red">? Unknown</span>';
+  return `<span class="badge badge-yellow">🎯 ${s}</span>`;
+}
+
+// ============================================================
+// RENDERING
+// ============================================================
+let currentView = 'cards';
+let activeCountryId = null;
+
+function setView(v) {
+  currentView = v;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('cards-view').style.display = v === 'cards' ? 'block' : 'none';
+  document.getElementById('table-view').style.display = v === 'table' ? 'block' : 'none';
+  document.getElementById('detail-view').style.display = 'none';
+  if (v === 'table') renderTable();
+}
+
+function applyFilters() {
+  renderCards();
+  if (currentView === 'table') renderTable();
+}
+
+function resetFilters() {
+  document.getElementById('filter-country').value = 'all';
+  document.getElementById('filter-disease').value = 'all';
+  document.getElementById('filter-oem').value = 'all';
+  applyFilters();
+}
+
+function getFiltered() {
+  const country = document.getElementById('filter-country').value;
+  const oem = document.getElementById('filter-oem').value;
+  return COUNTRIES.filter(c => {
+    if (country !== 'all' && c.id !== country) return false;
+    if (oem === 'complete' && !['complete','near_complete'].includes(c.oemStatus)) return false;
+    if (oem === 'progress' && !['progress','partial','incomplete'].includes(c.oemStatus)) return false;
+    if (oem === 'na' && c.oemStatus !== 'na') return false;
+    return true;
+  });
+}
+
+function renderCards() {
+  const filtered = getFiltered();
+  const grid = document.getElementById('country-grid');
+  const empty = document.getElementById('empty-state');
+  if (filtered.length === 0) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  const disease = document.getElementById('filter-disease').value;
+  grid.innerHTML = filtered.map(c => renderCountryCard(c, disease)).join('');
+}
+
+function renderCountryCard(c, diseaseFilter) {
+  const showOncho = diseaseFilter === 'all' || diseaseFilter === 'oncho';
+  const showTrachoma = diseaseFilter === 'all' || diseaseFilter === 'trachoma';
+  const showSch = diseaseFilter === 'all' || diseaseFilter === 'sch';
+  const showLf = diseaseFilter === 'all' || diseaseFilter === 'lf';
+
+  let sections = '';
+
+  if (showOncho) {
+    sections += `
+    <div class="disease-section oncho">
+      <div class="disease-section-header">🌿 Onchocerciasis</div>
+      <div class="disease-section-body">
+        <div class="field-row"><div class="field-label">OEM Status</div><div class="field-value">${oemBadge(c.oemStatus)} <span style="font-size:12px;color:#555">${c.oemNote}</span></div></div>
+        <div class="field-row"><div class="field-label">STOP MDA</div><div class="field-value">${stopMDABadge(c.stopMDA)} <span style="font-size:12px;color:#555">${c.stopMDANote}</span></div></div>
+        <div class="field-row"><div class="field-label">Integration</div><div class="field-value">${c.oncho_integration}</div></div>
+        <div class="field-row"><div class="field-label">Key Partners</div><div class="field-value">${c.oncho_partners}</div></div>
+      </div>
+    </div>`;
+  }
+
+  if (showTrachoma) {
+    sections += `
+    <div class="disease-section trachoma">
+      <div class="disease-section-header">👁️ Trachoma</div>
+      <div class="disease-section-body">
+        <div class="field-row"><div class="field-label">Status</div><div class="field-value">${ttBadge(c.tt_status)}</div></div>
+        <div class="field-row"><div class="field-label">Surgery / TT</div><div class="field-value">${c.tt_surgery}</div></div>
+        <div class="field-row"><div class="field-label">Antibiotics</div><div class="field-value">${c.tt_antibiotics}</div></div>
+      </div>
+    </div>`;
+  }
+
+  if (showSch) {
+    sections += `
+    <div class="disease-section sch">
+      <div class="disease-section-header">🔬 SCH / STH</div>
+      <div class="disease-section-body">
+        <div class="field-row"><div class="field-label">Workforce</div><div class="field-value">${c.sch_workforce}</div></div>
+        <div class="field-row"><div class="field-label">PC Coverage</div><div class="field-value">${c.sch_pc}</div></div>
+        <div class="field-row"><div class="field-label">Supply Chain</div><div class="field-value">${c.sch_supply}</div></div>
+        <div class="field-row"><div class="field-label">Domestic Funding</div><div class="field-value">${c.sch_funding}</div></div>
+      </div>
+    </div>`;
+  }
+
+  if (showLf) {
+    sections += `
+    <div class="disease-section lf">
+      <div class="disease-section-header">💧 Lymphatic Filariasis (LF)</div>
+      <div class="disease-section-body">
+        <div class="field-row"><div class="field-label">LF Status</div><div class="field-value">${lfBadge(c.lf_status)}</div></div>
+        <div class="field-row"><div class="field-label">Summary</div><div class="field-value">${c.lf_summary}</div></div>
+        <div class="field-row"><div class="field-label">Integration</div><div class="field-value">${c.lf_integration}</div></div>
+        <div class="field-row"><div class="field-label">Partners</div><div class="field-value">${c.lf_partners}</div></div>
+        <div class="field-row"><div class="field-label" style="color:#888;font-style:italic">Data note</div><div class="field-value" style="color:#888;font-style:italic;font-size:12px">${c.lf_dataNote}</div></div>
+      </div>
+    </div>`;
+  }
+
+  sections += `
+    <div class="disease-section cross">
+      <div class="disease-section-header">⚡ Cross-Cutting</div>
+      <div class="disease-section-body">
+        <div class="field-row"><div class="field-label">Financial Sustainability</div><div class="field-value">${c.fin_sustainability}</div></div>
+        <div class="field-row"><div class="field-label">Priority Actions</div><div class="field-value">${c.accel_actions}</div></div>
+      </div>
+    </div>`;
+
+  return `
+  <div class="country-card" id="card-${c.id}">
+    <div class="country-card-header" onclick="toggleCard('${c.id}')">
+      <div>
+        <div class="country-name">${c.name}</div>
+        <div class="country-region">${c.region} ${c.hasInterview ? '· <span style="color:#0277bd;font-size:11px">📝 Interview Summary Available</span>' : ''}</div>
+        <div class="status-pills" style="margin-top:6px">
+          ${oemBadge(c.oemStatus)}
+          ${ttBadge(c.tt_status)}
+          ${lfBadge(c.lf_status)}
+          ${stopMDABadge(c.stopMDA)}
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button onclick="event.stopPropagation();openDetail('${c.id}')" style="padding:5px 12px;font-size:12px;border:1px solid #0d4a7a;color:#0d4a7a;background:white;border-radius:5px;cursor:pointer;font-weight:600">Full Detail →</button>
+        <span class="collapse-icon">▾</span>
+      </div>
+    </div>
+    <div class="country-card-body">${sections}</div>
+  </div>`;
+}
+
+function toggleCard(id) {
+  const card = document.getElementById('card-' + id);
+  card.classList.toggle('collapsed');
+}
+
+function openDetail(id) {
+  const c = COUNTRIES.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('cards-view').style.display = 'none';
+  document.getElementById('table-view').style.display = 'none';
+  document.getElementById('detail-view').style.display = 'block';
+  activeCountryId = id;
+
+  const content = document.getElementById('detail-content');
+  content.innerHTML = `
+    <div class="detail-country-header">
+      <h2>${c.name}</h2>
+      <p>${c.region} &nbsp;·&nbsp; MTR Country 1:1 Interview, March 2026</p>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title oncho">🌿 Onchocerciasis</div>
+      <div class="detail-section-body">
+        <div class="detail-field"><div class="detail-field-label">OEM Status</div><div class="detail-field-value">${oemBadge(c.oemStatus)} — ${c.oemNote}</div></div>
+        <div class="detail-field"><div class="detail-field-label">STOP MDA Timeline</div><div class="detail-field-value">${stopMDABadge(c.stopMDA)} — ${c.stopMDANote}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Integration Opportunities</div><div class="detail-field-value">${c.oncho_integration}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Innovations</div><div class="detail-field-value">${c.oncho_innovations}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Priority Actions</div><div class="detail-field-value">${c.oncho_priorities}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Laboratory Activities</div><div class="detail-field-value">${c.oncho_labs}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Key Partners</div><div class="detail-field-value">${c.oncho_partners}</div></div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title trachoma">👁️ Trachoma</div>
+      <div class="detail-section-body">
+        <div class="detail-field"><div class="detail-field-label">Programme Status</div><div class="detail-field-value">${ttBadge(c.tt_status)}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Surgery / HEAD START Access</div><div class="detail-field-value">${c.tt_surgery}</div></div>
+        <div class="detail-field"><div class="detail-field-label">TT Management Strategies</div><div class="detail-field-value">${c.tt_management}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Post-operative TT</div><div class="detail-field-value">${c.tt_antibiotics !== 'Not applicable.' ? c.tt_antibiotics : 'N/A'}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Antibiotics Supply</div><div class="detail-field-value">${c.tt_antibiotics}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Prevalence Surveys</div><div class="detail-field-value">${c.tt_surveys}</div></div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title sch">🔬 Schistosomiasis (SCH) / STH</div>
+      <div class="detail-section-body">
+        <div class="detail-field"><div class="detail-field-label">Programme Capacity & Workforce</div><div class="detail-field-value">${c.sch_workforce}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Preventive Chemotherapy</div><div class="detail-field-value">${c.sch_pc}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Medicines Supply & Distribution</div><div class="detail-field-value">${c.sch_supply}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Case Management</div><div class="detail-field-value">${c.sch_casemgt}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Surveillance & Monitoring</div><div class="detail-field-value">${c.sch_surveillance}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Data Use</div><div class="detail-field-value">${c.sch_data}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Diagnostics</div><div class="detail-field-value">${c.sch_diagnostics}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Integration & Sustainability</div><div class="detail-field-value">${c.sch_integration}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Domestic Funding</div><div class="detail-field-value">${c.sch_funding}</div></div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title lf">💧 Lymphatic Filariasis (LF)</div>
+      <div class="detail-section-body">
+        <div class="detail-field"><div class="detail-field-label">LF Status</div><div class="detail-field-value">${lfBadge(c.lf_status)}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Programme Summary</div><div class="detail-field-value">${c.lf_summary}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Integration</div><div class="detail-field-value">${c.lf_integration}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Key Partners</div><div class="detail-field-value">${c.lf_partners}</div></div>
+        <div class="detail-field"><div class="detail-field-label" style="color:#888">Data Note</div><div class="detail-field-value" style="color:#888;font-style:italic;font-size:12px">⚠ ${c.lf_dataNote}</div></div>
+      </div>
+    </div>
+
+    <div class="detail-section">
+      <div class="detail-section-title cross">⚡ Cross-Cutting</div>
+      <div class="detail-section-body">
+        <div class="detail-field"><div class="detail-field-label">Financial Sustainability</div><div class="detail-field-value">${c.fin_sustainability}</div></div>
+        <div class="detail-field"><div class="detail-field-label">Acceleration Actions</div><div class="detail-field-value">${c.accel_actions}</div></div>
+      </div>
+    </div>
+
+    ${c.hasInterview ? `
+    <div class="detail-section">
+      <div class="detail-section-title" style="background:#fff8e1;color:#e65100;border-bottom:2px solid #e65100">📝 Interview Summary Notes</div>
+      <div class="detail-section-body">
+        <div class="interview-note">
+          <div class="interview-note-label">From AI interview summary (${c.name}, March 2026)</div>
+          ${c.interviewNote}
+        </div>
+      </div>
+    </div>` : ''}
+  `;
+}
+
+function closeDetail() {
+  document.getElementById('detail-view').style.display = 'none';
+  if (currentView === 'cards') document.getElementById('cards-view').style.display = 'block';
+  else document.getElementById('table-view').style.display = 'block';
+  activeCountryId = null;
+}
+
+function renderTable() {
+  const filtered = getFiltered();
+  const tbody = document.getElementById('table-body');
+  tbody.innerHTML = filtered.map(c => `
+    <tr>
+      <td class="td-country">
+        <div>${c.name}</div>
+        <div style="font-size:11px;color:var(--muted)">${c.region}</div>
+        <div style="margin-top:4px"><button onclick="openDetail('${c.id}')" style="padding:3px 8px;font-size:11px;border:1px solid #0d4a7a;color:#0d4a7a;background:white;border-radius:4px;cursor:pointer">Detail →</button></div>
+      </td>
+      <td>${oemBadge(c.oemStatus)}<br><span style="font-size:11px;color:#555">${c.oemNote.substring(0,80)}…</span></td>
+      <td>${stopMDABadge(c.stopMDA)}</td>
+      <td style="font-size:12px">${c.oncho_integration.substring(0,80)}…</td>
+      <td>${ttBadge(c.tt_status)}</td>
+      <td style="font-size:12px">${c.tt_surgery.substring(0,70)}…</td>
+      <td style="font-size:12px">${c.tt_antibiotics.substring(0,70)}…</td>
+      <td style="font-size:12px">${c.sch_workforce.substring(0,70)}…</td>
+      <td style="font-size:12px">${c.sch_pc.substring(0,70)}…</td>
+      <td style="font-size:12px">${c.sch_supply.substring(0,70)}…</td>
+      <td>${lfBadge(c.lf_status)}</td>
+      <td style="font-size:12px">${c.lf_summary.substring(0,90)}…</td>
+      <td style="font-size:12px">${c.oncho_partners}</td>
+    </tr>
+  `).join('');
+}
+
+// ============================================================
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  // Populate country filter
+  const sel = document.getElementById('filter-country');
+  COUNTRIES.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.id;
+    opt.textContent = c.name;
+    sel.appendChild(opt);
+  });
+
+  renderCards();
+}
+
+init();
+</script>
+</body>
+</html>
