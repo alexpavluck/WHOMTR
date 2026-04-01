@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NTD MTR Dashboard — 29 Countries · 5 PC NTDs</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
+<style>
+:root{
+  --bg:#f0f2f5; --card:#fff; --hdr:#0b3a6e; --hdr2:#1565c0;
+  --text:#1a202c; --muted:#6b7280; --border:#e2e8f0;
+  --green:#16a34a; --gbg:#dcfce7; --glt:#bbf7d0;
+  --yellow:#b45309; --ybg:#fef3c7; --ylt:#fde68a;
+  --red:#dc2626; --rbg:#fee2e2; --rlt:#fca5a5;
+  --gray:#9ca3af; --grbg:#f3f4f6;
+  --blue:#1565c0; --bbg:#dbeafe;
+  --oncho:#1565c0; --oncho-bg:#eff6ff;
+  --lf:#7c3aed; --lf-bg:#f5f3ff;
+  --trach:#0891b2; --trach-bg:#ecfeff;
+  --sch:#047857; --sch-bg:#ecfdf5;
+  --sth:#92400e; --sth-bg:#fff7ed;
+  --r:10px; --gap:13px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:13px;line-height:1.55;}
+
+/* HEADER */
+.hdr{background:linear-gradient(135deg,var(--hdr),var(--hdr2));color:#fff;border-radius:var(--r);padding:16px 22px;margin-bottom:var(--gap);}
+.hdr h1{font-size:19px;font-weight:700;margin-bottom:2px;}
+.hdr .meta{font-size:11px;opacity:.75;margin-bottom:10px;}
+.filters{display:flex;gap:9px;flex-wrap:wrap;align-items:flex-end;}
+.fg{display:flex;flex-direction:column;gap:2px;}
+.fg label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;opacity:.7;}
+.fg select{padding:5px 10px;border:1px solid rgba(255,255,255,.2);border-radius:5px;background:rgba(255,255,255,.13);color:#fff;font-size:12px;cursor:pointer;min-width:145px;}
+.fg select option{background:#1a3a5c;color:#fff;}
+.rbtn{padding:5px 12px;background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:5px;font-size:11px;cursor:pointer;margin-top:15px;}
+.rbtn:hover{background:rgba(255,255,255,.28);}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;}
+.li{display:flex;align-items:center;gap:4px;font-size:11px;opacity:.85;}
+.ld{width:9px;height:9px;border-radius:2px;}
+
+/* KPI */
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:var(--gap);margin-bottom:var(--gap);}
+.kpi{background:var(--card);border-radius:var(--r);padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.kpi-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px;}
+.kpi-val{font-size:26px;font-weight:700;line-height:1.1;}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+.kpi.green .kpi-val{color:var(--green);} .kpi.yellow .kpi-val{color:var(--yellow);}
+.kpi.red .kpi-val{color:var(--red);} .kpi.blue .kpi-val{color:var(--hdr2);}
+
+/* MATRIX */
+.mwrap{background:var(--card);border-radius:var(--r);padding:16px 18px;margin-bottom:var(--gap);box-shadow:0 1px 3px rgba(0,0,0,.06);overflow-x:auto;}
+.mtitle{font-size:13px;font-weight:600;margin-bottom:10px;}
+.matrix{width:100%;border-collapse:collapse;font-size:12px;}
+.matrix th{padding:7px 8px;font-weight:600;text-align:left;border-bottom:2px solid var(--border);font-size:10px;white-space:nowrap;}
+.matrix th.dh{text-align:center;min-width:110px;padding:7px 5px;}
+.matrix td{padding:6px 8px;border-bottom:1px solid #f0f0f2;vertical-align:middle;}
+.matrix tbody tr{cursor:pointer;transition:background .12s;}
+.matrix tbody tr:hover{background:#f7f9fc;}
+.matrix tbody tr.sel{background:#eff6ff;}
+.badge{display:inline-flex;align-items:center;justify-content:center;width:100%;padding:3px 5px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;}
+.badge.green{background:var(--gbg);color:var(--green);}
+.badge.yellow{background:var(--ybg);color:var(--yellow);}
+.badge.red{background:var(--rbg);color:var(--red);}
+.badge.gray{background:var(--grbg);color:var(--gray);}
+.badge.blue{background:var(--bbg);color:var(--blue);}
+.ctag{font-size:9px;background:#e2e8f0;color:#4a5568;padding:1px 5px;border-radius:8px;font-weight:600;margin-left:4px;}
+.rtag{font-size:9px;background:#e2e8f0;color:#374151;padding:1px 5px;border-radius:8px;font-weight:500;}
+.oem-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:3px;}
+
+/* DETAIL */
+.dpanel{background:var(--card);border-radius:var(--r);margin-bottom:var(--gap);box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden;}
+.dhead{background:linear-gradient(135deg,var(--hdr),var(--hdr2));color:#fff;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.dhead h2{font-size:16px;font-weight:700;}
+.dhead .dmeta{font-size:11px;opacity:.8;}
+.dbody{padding:16px 20px;}
+.thematic-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:14px;}
+.th-card{background:#f8fafc;border-radius:7px;padding:10px 12px;border-left:3px solid;}
+.th-card h4{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.th-card p{font-size:11px;color:var(--muted);}
+.th-card.active{background:var(--ybg);border-left-color:var(--yellow);}
+.th-card.active h4{color:var(--yellow);}
+.th-card.active p{color:#78350f;}
+
+.disease-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;}
+.dcard{border-radius:8px;padding:12px 14px;border:1px solid;}
+.dcard-head{display:flex;align-items:center;gap:6px;margin-bottom:8px;}
+.dcard-head .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dcard-head h4{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;}
+.status-pill{font-size:10px;padding:2px 6px;border-radius:8px;font-weight:600;margin-left:auto;white-space:nowrap;}
+.chal-list{padding-left:14px;margin-bottom:8px;}
+.chal-list li{font-size:11.5px;margin-bottom:3px;line-height:1.4;}
+.act-item{background:rgba(255,255,255,.7);border-radius:4px;padding:5px 7px;font-size:11px;line-height:1.4;margin-bottom:4px;border-left:2px solid;}
+.priority-box{background:var(--ybg);border:1px solid var(--ylt);border-radius:7px;padding:10px 14px;margin-top:12px;}
+.priority-box .plbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--yellow);margin-bottom:3px;}
+.priority-box p{font-size:12px;color:#78350f;}
+
+/* CHARTS */
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap);margin-bottom:var(--gap);}
+@media(max-width:750px){.chart-row{grid-template-columns:1fr;}}
+.ccard{background:var(--card);border-radius:var(--r);padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.ccard h3{font-size:12px;font-weight:600;margin-bottom:12px;color:var(--text);}
+.ccard canvas{max-height:260px;}
+
+/* ACTION TABLE */
+.twrap{background:var(--card);border-radius:var(--r);padding:16px 18px;margin-bottom:var(--gap);box-shadow:0 1px 3px rgba(0,0,0,.06);overflow-x:auto;}
+.twrap h3{font-size:13px;font-weight:600;margin-bottom:12px;}
+.atable{width:100%;border-collapse:collapse;font-size:12px;}
+.atable th{text-align:left;padding:8px 10px;border-bottom:2px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);cursor:pointer;user-select:none;white-space:nowrap;}
+.atable th:hover{color:var(--text);background:#fafafa;}
+.atable td{padding:8px 10px;border-bottom:1px solid #f0f0f0;vertical-align:top;}
+.atable tr:hover td{background:#fafafa;}
+.atable tr:last-child td{border:none;}
+.dbadge{display:inline-block;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:600;}
+.dbadge.oncho{background:var(--oncho-bg);color:var(--oncho);}
+.dbadge.lf{background:var(--lf-bg);color:var(--lf);}
+.dbadge.trach{background:var(--trach-bg);color:var(--trach);}
+.dbadge.sch{background:var(--sch-bg);color:var(--sch);}
+.dbadge.sth{background:var(--sth-bg);color:var(--sth);}
+.sbadge{display:inline-block;padding:1px 6px;border-radius:8px;font-size:10px;font-weight:600;}
+.sbadge.Critical{background:var(--rbg);color:var(--red);}
+.sbadge.At-Risk{background:var(--ybg);color:var(--yellow);}
+.sbadge.On-Track{background:var(--gbg);color:var(--green);}
+
+/* Misc */
+.nodata{text-align:center;padding:25px;color:var(--muted);font-size:13px;}
+.sect-lbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px;display:block;}
+
+/* DETAILS LINK */
+.det-link{font-size:10px;font-weight:600;color:var(--hdr2);background:var(--bbg);border:none;border-radius:4px;padding:2px 6px;cursor:pointer;margin-left:6px;white-space:nowrap;text-decoration:none;}
+.det-link:hover{background:#bfdbfe;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;}
+.modal-overlay.hidden{display:none;}
+.modal{background:#fff;border-radius:12px;max-width:760px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.25);overflow:hidden;}
+.modal-hdr{background:linear-gradient(135deg,var(--hdr),var(--hdr2));color:#fff;padding:16px 22px;display:flex;align-items:center;justify-content:space-between;}
+.modal-hdr h2{font-size:17px;font-weight:700;}
+.modal-hdr .mclose{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:6px;padding:4px 12px;cursor:pointer;font-size:12px;}
+.modal-hdr .mclose:hover{background:rgba(255,255,255,.35);}
+.modal-body{padding:22px 26px;max-height:75vh;overflow-y:auto;}
+.modal-meta{font-size:12px;color:var(--muted);margin-bottom:18px;display:flex;gap:12px;flex-wrap:wrap;}
+.modal-meta span{background:var(--grbg);padding:3px 8px;border-radius:6px;}
+.th-section{margin-bottom:20px;}
+.th-section h3{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:6px 10px;border-radius:5px;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.th-section h3 .th-icon{font-size:14px;}
+.th-section.has-issues h3{background:var(--ybg);color:var(--yellow);}
+.th-section.no-issues h3{background:var(--grbg);color:var(--muted);}
+.th-section p{font-size:13px;line-height:1.7;color:var(--text);margin-bottom:8px;}
+.th-section p:last-child{margin-bottom:0;}
+.th-actions{margin-top:10px;border-top:1px solid var(--border);padding-top:10px;}
+.th-actions .al{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:6px;}
+.th-act{background:#f8fafc;border-left:3px solid var(--hdr2);border-radius:0 5px 5px 0;padding:6px 10px;font-size:12px;line-height:1.5;margin-bottom:5px;}
+</style>
+</head>
+<body>
+<div style="max-width:1500px;margin:0 auto;padding:13px;">
+
+<!-- HEADER -->
+<div class="hdr">
+  <h1>NTD Mid-Term Review — Country &amp; Disease Dashboard</h1>
+  <div class="meta">2020–2030 Roadmap · MTR 2026 · 29 Countries · 5 PC NTDs: Onchocerciasis · LF · Trachoma · SCH · STH</div>
+  <div class="filters">
+    <div class="fg"><label>Country</label>
+      <select id="sel-c" onchange="applyFilters()"><option value="">All Countries</option></select>
+    </div>
+    <div class="fg"><label>Disease</label>
+      <select id="sel-d" onchange="applyFilters()">
+        <option value="">All Diseases</option>
+        <option>Onchocerciasis</option><option>Lymphatic Filariasis</option>
+        <option>Trachoma</option><option>Schistosomiasis</option><option>STH</option>
+      </select>
+    </div>
+    <div class="fg"><label>Thematic Area</label>
+      <select id="sel-t" onchange="applyFilters()">
+        <option value="">All Themes</option>
+        <option>Governance &amp; Coordination</option>
+        <option>Health System Integration</option>
+        <option>Financing &amp; Sustainability</option>
+        <option>Programme Capacity &amp; Access</option>
+        <option>Surveillance &amp; Data</option>
+      </select>
+    </div>
+    <button class="rbtn" onclick="resetFilters()">↺ Reset</button>
+  </div>
+  <div class="legend">
+    <div class="li"><div class="ld" style="background:var(--green)"></div>On Track</div>
+    <div class="li"><div class="ld" style="background:var(--yellow)"></div>At Risk</div>
+    <div class="li"><div class="ld" style="background:var(--red)"></div>Critical</div>
+    <div class="li"><div class="ld" style="background:var(--gray)"></div>Data Gap / N/A</div>
+    <div class="li"><span style="font-size:10px;background:var(--bbg);color:var(--blue);padding:1px 6px;border-radius:6px;font-weight:600;">Post-MDA</span>&nbsp;Surveillance phase</div>
+    <div class="li"><span style="font-size:10px;background:var(--gbg);color:var(--green);padding:1px 6px;border-radius:6px;font-weight:600;">Elim.</span>&nbsp;Eliminated/not endemic</div>
+  </div>
+</div>
+
+<!-- KPI -->
+<div class="kpi-row" id="kpi-row">
+  <div class="kpi blue"><div class="kpi-lbl">Countries</div><div class="kpi-val" id="kn">29</div><div class="kpi-sub">under review</div></div>
+  <div class="kpi green"><div class="kpi-lbl">On Track</div><div class="kpi-val" id="kg">—</div><div class="kpi-sub">countries</div></div>
+  <div class="kpi yellow"><div class="kpi-lbl">At Risk</div><div class="kpi-val" id="ky">—</div><div class="kpi-sub">countries</div></div>
+  <div class="kpi red"><div class="kpi-lbl">Critical</div><div class="kpi-val" id="kr">—</div><div class="kpi-sub">countries</div></div>
+  <div class="kpi blue"><div class="kpi-lbl">OEM Complete</div><div class="kpi-val" id="koem">—</div><div class="kpi-sub">oncho mapping done</div></div>
+  <div class="kpi yellow"><div class="kpi-lbl">Data Gaps</div><div class="kpi-val" id="kdg">—</div><div class="kpi-sub">NTD×country pairs</div></div>
+</div>
+
+<!-- MATRIX -->
+<div class="mwrap">
+  <div class="mtitle">Country × Disease Status Matrix — click a row to expand detail, click a cell to filter by disease</div>
+  <table class="matrix" id="mtable">
+    <thead>
+      <tr>
+        <th style="min-width:130px;">Country</th>
+        <th style="width:70px;">Region</th>
+        <th style="width:55px;">Overall</th>
+        <th style="width:55px;">OEM</th>
+        <th class="dh" style="color:var(--oncho);">🔵 Oncho</th>
+        <th class="dh" style="color:var(--lf);">🟣 LF</th>
+        <th class="dh" style="color:var(--trach);">🔷 Trachoma</th>
+        <th class="dh" style="color:var(--sch);">🟢 SCH</th>
+        <th class="dh" style="color:var(--sth);">🟠 STH</th>
+      </tr>
+    </thead>
+    <tbody id="mbody"></tbody>
+  </table>
+</div>
+
+<!-- DETAIL PANEL -->
+<div class="dpanel" id="dpanel" style="display:none;"></div>
+
+<!-- CHARTS -->
+<div class="chart-row">
+  <div class="ccard"><h3>Overall Status by Region</h3><canvas id="ch-region"></canvas></div>
+  <div class="ccard"><h3>PC NTD Programme Status (all countries × all diseases)</h3><canvas id="ch-disease"></canvas></div>
+</div>
+<div class="chart-row">
+  <div class="ccard"><h3>Thematic Issues Frequency (countries with identified gaps)</h3><canvas id="ch-theme"></canvas></div>
+  <div class="ccard"><h3>OEM Status Distribution</h3><canvas id="ch-oem"></canvas></div>
+</div>
+
+<!-- ACTION TABLE -->
+<div class="twrap">
+  <h3>Priority Actions — <span id="act-count">0</span> actions in current view</h3>
+  <table class="atable" id="atable">
+    <thead>
+      <tr>
+        <th onclick="sortAct('country')">Country ⇅</th>
+        <th onclick="sortAct('region')">Region ⇅</th>
+        <th onclick="sortAct('overall')">Status ⇅</th>
+        <th onclick="sortAct('disease')">Disease ⇅</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="atbody"></tbody>
+  </table>
+</div>
+
+<!-- THEMATIC SUMMARY MODAL -->
+<div class="modal-overlay hidden" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-box">
+    <div class="modal-hdr">
+      <h2 id="modal-title">Country Summary</h2>
+      <button class="mclose" onclick="closeModalDirect()">✕ Close</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const RAW = {"Angola": {"region": "S. Africa", "oncho_stop_mda_year": null, "oem_status": "Not started", "diseases": {"Onchocerciasis": {"status": "Endemic-Active MDA", "challenges": ["Cross-border collaboration with DRC and Zambia has been expressed but not formally operationalized or implemented despite regional interest.", "Mapping for elimination has not yet been formalized, requiring coordinated assessment to establish endemic zones and transmission status.", "Lack of formal operational health teams prevents synchronized mapping, mass drug administration, and surveillance activities across borders."], "actions": ["Establish formal cross-border agreement with DRC and Zambia to operationalize onchocerciasis elimination activities.", "Complete comprehensive baseline mapping in all potentially endemic areas to determine transmission zones and guide MDA strategy."]}, "Lymphatic Filariasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Conduct mapping and surveillance assessment to determine endemic status and guide programming."]}, "Trachoma": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Assess trachoma endemicity to determine if elimination activities are needed."]}, "Schistosomiasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Establish surveillance system for schistosomiasis monitoring and case management."]}, "STH": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Implement school-based and community-based STH screening programs."]}}, "key_themes": ["Governance & Coordination", "Surveillance & Data"], "overall_status": "Critical", "top_priority_action": "Formalize cross-border agreements with neighboring countries and establish baseline epidemiological mapping for onchocerciasis."}, "Benin": {"region": "W. Africa", "oncho_stop_mda_year": null, "oem_status": "Not started", "diseases": {"Onchocerciasis": {"status": "Endemic-Active MDA", "challenges": ["National Committee for Elimination of Onchocerciasis (CNEO) meeting was not held in 2024, disrupting coordination and strategic planning.", "Cross-border collaboration with Togo remains informal with data exchange occurring only during meetings, lacking systematized protocols.", "Memorandum of Understanding for cross-border cooperation has not yet been finalized and requires formal development with Nigeria."], "actions": ["Establish regular CNEO meeting schedule with documented attendance and decision-making to strengthen governance.", "Develop and sign formal Memorandum of Understanding with Nigeria and Togo for synchronized cross-border operations."]}, "Lymphatic Filariasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Assess lymphatic filariasis endemicity and establish baseline for programming."]}, "Trachoma": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Conduct endemicity assessment and determine resource requirements for trachoma elimination."]}, "Schistosomiasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Initiate surveillance and mapping for schistosomiasis endemic zones."]}, "STH": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Establish school-based MDA program for STH control."]}}, "key_themes": ["Governance & Coordination", "Surveillance & Data"], "overall_status": "At Risk", "top_priority_action": "Reinvigorate CNEO meetings and formalize cross-border coordination mechanisms with neighboring countries."}, "Burkina Faso": {"region": "W. Africa", "oncho_stop_mda_year": null, "oem_status": "Not started", "diseases": {"Onchocerciasis": {"status": "Endemic-Active MDA", "challenges": ["Technical Subcommittee on Onchocerciasis Elimination has not met since November 2023, indicating governance gaps in program oversight.", "Cross-border collaboration with five neighboring countries (Cote d'Ivoire, Ghana, Togo, Mali, Niger) lacks formal operational agreements.", "Synchronized mapping, mass drug administration, and surveillance activities with neighboring countries have not yet been implemented despite regional interest."], "actions": ["Resume regular Technical Subcommittee meetings with formal documentation and quarterly oversight of onchocerciasis activities.", "Develop formal cross-border framework agreements with Cote d'Ivoire, Ghana, Togo, Mali, and Niger to synchronize mapping and MDA."]}, "Lymphatic Filariasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Establish filariasis elimination committee and conduct baseline mapping."]}, "Trachoma": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Assess trachoma prevalence and determine need for elimination program."]}, "Schistosomiasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Conduct mapping and surveillance system for schistosomiasis."]}, "STH": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Implement integrated STH and schistosomiasis MDA program."]}}, "key_themes": ["Governance & Coordination", "Surveillance & Data"], "overall_status": "At Risk", "top_priority_action": "Reactivate Technical Subcommittee meetings and establish formal bilateral agreements for cross-border onchocerciasis elimination activities."}, "Burundi": {"region": "E. Africa", "oncho_stop_mda_year": null, "oem_status": "Not started", "diseases": {"Onchocerciasis": {"status": "Endemic-Active MDA", "challenges": ["National Committee for Elimination of Onchocerciasis established by ministerial order in 2021 has held only one meeting in March 2025, indicating weak governance.", "No cross-border operational collaboration is in place despite geographic proximity to endemic countries.", "National Master Plan 2022-2027 is the third generation but implementation appears limited by coordination and funding gaps."], "actions": ["Establish regular quarterly CNEO meetings with technical oversight and decision documentation.", "Conduct cross-border consultations with neighboring countries to establish coordination mechanisms and data sharing protocols."]}, "Lymphatic Filariasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Assess lymphatic filariasis endemicity and establish control program."]}, "Trachoma": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Determine trachoma endemicity and resource needs for elimination."]}, "Schistosomiasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Implement surveillance and mapping for schistosomiasis control."]}, "STH": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Integrate STH with schistosomiasis MDA programs."]}}, "key_themes": ["Governance & Coordination"], "overall_status": "At Risk", "top_priority_action": "Strengthen CNEO governance through regular meetings and implement baseline mapping for onchocerciasis."}, "CAR": {"region": "C. Africa", "oncho_stop_mda_year": null, "oem_status": "Unknown", "diseases": {"Onchocerciasis": {"status": "Data Gap", "challenges": ["Interview summary indicates district-level implementation challenges with issues related to campaign regularity and community therapy coordination.", "Administrative and systemic barriers including financial constraints, electricity, and integration of programs are complicating disease control efforts.", "Surveillance and endemic area mapping require comprehensive assessment with progress dashboard and maps to guide planning."], "actions": ["Develop progress dashboard with endemic area maps to track MDA activities and guide future planning.", "Implement systematized approach to address district-level operational issues and ensure campaign regularity across all endemic zones."]}, "Lymphatic Filariasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Establish baseline epidemiology for lymphatic filariasis."]}, "Trachoma": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Assess trachoma endemicity in the country."]}, "Schistosomiasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Conduct baseline assessment for schistosomiasis control programming."]}, "STH": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Establish STH control program aligned with health system."]}}, "key_themes": ["Governance & Coordination", "Health System Integration", "Surveillance & Data"], "overall_status": "Critical", "top_priority_action": "Create comprehensive progress dashboard with endemic area mapping and implement systematized approach to improve campaign regularity."}, "Cameroon": {"region": "C. Africa", "oncho_stop_mda_year": null, "oem_status": "Partial", "diseases": {"Onchocerciasis": {"status": "Endemic-Active MDA", "challenges": ["Onchocerciasis elimination mapping was suspended in 2024 due to cessation of USAID funding, delaying achievement of the Stop MDA objective.", "Loasis mapping has not been updated and Loascope Test and Treat project has not been launched, leaving treatment gaps in coendemic areas.", "Stop MDA timing cannot be determined without completing elimination mapping and addressing loasis complications in hyperendemic districts."], "actions": ["Secure alternative funding to resume and complete onchocerciasis elimination mapping in all targeted districts.", "Update loasis epidemiology and implement Loascope Test and Treat strategy to address coinfection challenges before MDA cessation."]}, "Lymphatic Filariasis": {"status": "Endemic-Active MDA", "challenges": ["Coordination between onchocerciasis and lymphatic filariasis programs has been challenging due to fragmented health system structures.", "Budget gap for preventive chemotherapy programs reaches 3-4 billion FCFA annually, forcing difficult prioritization decisions."], "actions": ["Enhance program integration mechanisms to share resources and logistical platforms between onchocerciasis and filariasis campaigns."]}, "Trachoma": {"status": "Post-MDA Surveillance", "challenges": ["Majority of trachomatous trichiasis surgeries are complete but post-elimination surveillance and health system sustainability require strengthening."], "actions": ["Develop post-elimination sustainability plan with integration of trachoma services into routine eye care systems."]}, "Schistosomiasis": {"status": "Endemic-Active MDA", "challenges": ["Lack of specialized technical personnel at peripheral level for planning and surveillance of schistosomiasis and soil-transmitted helminths.", "Clinical morbidity management for urinary schistosomiasis including complications requires strengthened health system capacity."], "actions": ["Conduct training and capacity building for district-level technical staff on schistosomiasis surveillance and case management.", "Establish referral pathways for management of schistosomiasis morbidity complications at facility level."]}, "STH": {"status": "Endemic-Active MDA", "challenges": ["Insufficient specialized personnel for soil-transmitted helminthiasis surveillance and data analysis at district level."], "actions": ["Integrate STH surveillance into district health information systems with capacity building for focal persons."]}}, "key_themes": ["Governance & Coordination", "Financing & Sustainability", "Programme Capacity & Access", "Surveillance & Data"], "overall_status": "Critical", "top_priority_action": "Secure emergency funding to resume onchocerciasis elimination mapping and address critical budget gaps for preventive chemotherapy programs."}, "Chad": {"region": "W. Africa", "oncho_stop_mda_year": null, "oem_status": "Not started", "diseases": {"Onchocerciasis": {"status": "Endemic-Active MDA", "challenges": ["National Committee for Elimination of Onchocerciasis (CNEO) was not operational as of reporting, with no formal meetings documented since leadership change in 2023.", "No cross-border collaboration activities have been implemented due to non-functional CNEO governance.", "National Master Plan 2024-2030 exists but lack of committee functionality prevents coordinated strategy implementation."], "actions": ["Formally establish and operationalize CNEO with clear governance structure, regular meeting schedule, and documented action plans.", "Conduct baseline epidemiological mapping to establish endemic zones and guide programmatic priorities."]}, "Lymphatic Filariasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Establish lymphatic filariasis program under integrated NTD framework."]}, "Trachoma": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Assess trachoma endemicity and establish elimination strategy if needed."]}, "Schistosomiasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Conduct schistosomiasis mapping and surveillance system establishment."]}, "STH": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Integrate STH with schistosomiasis program under unified strategy."]}}, "key_themes": ["Governance & Coordination"], "overall_status": "Critical", "top_priority_action": "Immediately establish and operationalize functional CNEO to provide governance and coordination for onchocerciasis elimination."}, "Congo": {"region": "C. Africa", "oncho_stop_mda_year": null, "oem_status": "Partial", "diseases": {"Onchocerciasis": {"status": "Endemic-Active MDA", "challenges": ["Several onchocerciasis elimination mapping and impact assessments have been conducted but results were not reported to WHO, limiting global tracking.", "Data collection faced field issues preventing use of standardized ESPEN Collect tool, affecting data quality and comparability.", "Laboratory system for parasitological confirmation requires microscopy capacity strengthening for prevalence evaluations."], "actions": ["Report all previously unreported onchocerciasis elimination mapping and impact assessment results to WHO through ESPEN.", "Conduct prevalence evaluation using laboratory-confirmed diagnostic methods to establish baseline transmission status."]}, "Lymphatic Filariasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Assess lymphatic filariasis endemicity and program status."]}, "Trachoma": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Determine trachoma endemicity and treatment needs."]}, "Schistosomiasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Establish schistosomiasis surveillance and mapping program."]}, "STH": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Implement integrated STH and schistosomiasis program."]}}, "key_themes": ["Surveillance & Data", "Programme Capacity & Access"], "overall_status": "At Risk", "top_priority_action": "Report all unreported assessment data to WHO and strengthen laboratory capacity for parasitological confirmation."}, "Cote d'Ivoire": {"region": "W. Africa", "oncho_stop_mda_year": null, "oem_status": "Partial", "diseases": {"Onchocerciasis": {"status": "Endemic-Active MDA", "challenges": ["Onchocerciasis elimination mapping recartography was interrupted due to cessation of funding, affecting ability to identify all endemic districts.", "Recartography must cover 13 districts, including 9 already treated for lymphatic filariasis and 4 never treated, requiring substantial resources.", "Impact assessments begun in 2023 are incomplete with samples still awaiting laboratory analysis for DBS testing."], "actions": ["Secure funding to complete recartography of 13 priority districts to establish baseline for elimination decisions.", "Expedite DBS sample analysis through available laboratory capacity and integrate results into ESPEN reporting framework."]}, "Lymphatic Filariasis": {"status": "Post-MDA Surveillance", "challenges": ["Lymphatic filariasis program shows good structural organization with adequate impact assessment systems."], "actions": ["Continue routine surveillance and prepare elimination documentation when transmission interruption is confirmed."]}, "Trachoma": {"status": "Eliminated/Not Endemic", "challenges": ["Cote d'Ivoire is not endemic for trachomatous trichiasis and has prepared elimination dossier for WHO submission."], "actions": ["Submit completed elimination dossier to WHO before end of year to formally document trachoma-free status."]}, "Schistosomiasis": {"status": "Endemic-Active MDA", "challenges": ["Schistosomiasis and soil-transmitted helminthiasis programs are well structured with effective chemoprevention despite funding constraints."], "actions": ["Maintain current program momentum and explore integration opportunities for sustainability."]}, "STH": {"status": "Endemic-Active MDA", "challenges": ["Soil-transmitted helminthiasis integrated management with schistosomiasis is functioning effectively."], "actions": ["Continue coordinated schistosomiasis and STH MDA campaigns with emphasis on coverage maintenance."]}}, "key_themes": ["Governance & Coordination", "Financing & Sustainability", "Surveillance & Data"], "overall_status": "At Risk", "top_priority_action": "Secure emergency funding for onchocerciasis recartography completion and accelerate DBS sample analysis."}, "DRC": {"region": "C. Africa", "oncho_stop_mda_year": null, "oem_status": "Partial", "diseases": {"Onchocerciasis": {"status": "Endemic-Active MDA", "challenges": ["National Committee for Elimination of Onchocerciasis held last meeting in August 2024 with no meetings in 2025 due to operational constraints.", "Cross-border collaboration with Uganda and Republic of Congo is limited; data exchange activities are not systematized despite geographic transmission links.", "Memorandum of Understanding development with South Sudan is pending receipt of South Sudan's draft from Christian Blind Mission facilitation."], "actions": ["Establish formal quarterly CNEO meeting schedule with documented action plans for 2026-2027 planning period.", "Finalize and sign cross-border Memorandum of Understanding with South Sudan, Uganda, and Congo to formalize collaborative activities."]}, "Lymphatic Filariasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Establish lymphatic filariasis elimination program coordination."]}, "Trachoma": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Assess trachoma endemicity and treatment needs."]}, "Schistosomiasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Establish schistosomiasis surveillance program aligned with onchocerciasis framework."]}, "STH": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Implement integrated STH program with schistosomiasis control."]}}, "key_themes": ["Governance & Coordination", "Surveillance & Data"], "overall_status": "At Risk", "top_priority_action": "Reactivate CNEO meetings and finalize cross-border Memorandum of Understanding with South Sudan to operationalize collaborative elimination efforts."}, "Equatorial Guinea": {"region": "C. Africa", "oncho_stop_mda_year": 2016, "oem_status": "Partial", "diseases": {"Onchocerciasis": {"status": "Post-MDA Surveillance", "challenges": ["Onchocerciasis elimination was achieved in Bioco island with MDA stopped in 2016, but continental transmission status remains uncertain.", "Epidemiological and entomological samples from recent survey are awaiting analysis at Ouagadougou laboratory with results expected by end of April.", "Protocol for survey included children in Bioco to verify elimination but adults in continental area where MDA was never conducted require intensive assessment."], "actions": ["Complete analysis of epidemiological and entomological samples at Ouagadougou laboratory by end of April.", "Develop post-MDA surveillance protocol for Bioco and evidence-based intervention strategy for continental area based on sample results."]}, "Lymphatic Filariasis": {"status": "Endemic-Active MDA", "challenges": ["Lymphatic filariasis program is being managed within integrated PC-NTD framework with current status not fully detailed."], "actions": ["Establish dedicated lymphatic filariasis elimination committee with baseline mapping."]}, "Trachoma": {"status": "Eliminated/Not Endemic", "challenges": ["Trachoma has never been reported in Equatorial Guinea and is not endemic."], "actions": ["Maintain surveillance to confirm continued absence of trachoma cases."]}, "Schistosomiasis": {"status": "Endemic-Active MDA", "challenges": ["Schistosomiasis treatment has been passive with significant underreporting of cases and risk of albendazol stock expiration in October.", "Adequate government funding allocation and pharmaceutical management system integration are lacking."], "actions": ["Transition from passive case identification to active case detection through school-based screening program.", "Secure government funding for schistosomiasis drug procurement and establish systematic pharmaceutical inventory management."]}, "STH": {"status": "Endemic-Active MDA", "challenges": ["Soil-transmitted helminthiasis management is linked to schistosomiasis treatment gaps due to funding and integration issues."], "actions": ["Implement school-based STH screening and treatment program integrated with schistosomiasis activities."]}}, "key_themes": ["Surveillance & Data", "Financing & Sustainability", "Programme Capacity & Access"], "overall_status": "At Risk", "top_priority_action": "Complete laboratory analysis of onchocerciasis samples and transition schistosomiasis program from passive to active case detection with secured government funding."}, "Ethiopia": {"region": "E. Africa", "oncho_stop_mda_year": 2035, "oem_status": "Partial", "diseases": {"Onchocerciasis": {"status": "Endemic-Active MDA", "challenges": ["Onchocerciasis elimination mapping is delayed due to local conflicts in Oromia and Tigray regions affecting field operations.", "Mapping is planned for 6 Oromia districts but security instability continues to pose access challenges.", "Full national stop Mass Drug Administration is estimated for 2035, indicating extended treatment timeline requiring sustained programming."], "actions": ["Develop conflict-sensitive mapping protocols for Oromia and Tigray districts in coordination with regional security assessments.", "Strengthen cross-border collaboration with Kenya and South Sudan for refugee population management and treatment."]}, "Lymphatic Filariasis": {"status": "Endemic-Active MDA", "challenges": ["Lymphatic filariasis program status requires detailed assessment for integration and sustainability planning."], "actions": ["Conduct baseline mapping and establish elimination targets aligned with onchocerciasis timeline."]}, "Trachoma": {"status": "Post-MDA Surveillance", "challenges": ["Trachoma elimination progress shows significant reduction in trachomatous follicular infection prevalence.", "External supply chain challenges including shipment delays for donated antibiotics and cartridge production problems for Head Start training model affect sustainability.", "Funding shortages and insecurity in high-endemic regions are hindering elimination efforts despite significant progress."], "actions": ["Develop local procurement strategy for antibiotics to reduce dependence on external supply chain.", "Secure funding for Head Start cartridge training and surgeon recruitment in accessible regions."]}, "Schistosomiasis": {"status": "Endemic-Active MDA", "challenges": ["Sufficient personnel exist for Mass Drug Administration delivery but lack of active surveillance system in surveillance-phase areas is problematic."], "actions": ["Establish active surveillance system for schistosomiasis in post-treatment zones to document interruption of transmission."]}, "STH": {"status": "Endemic-Active MDA", "challenges": ["Primary supply chain problem involves procurement delays due to protracted back-and-forth approval processes once drug requests are submitted."], "actions": ["Streamline pharmaceutical procurement processes and establish predictable supply chain mechanisms."]}}, "key_themes": ["Governance & Coordination", "Programme Capacity & Access", "Financing & Sustainability", "Surveillance & Data"], "overall_status": "At Risk", "top_priority_action": "Develop conflict-sensitive mapping protocols for Oromia and Tigray and establish local antibiotic procurement strategy to address supply chain challenges."}, "Gabon": {"region": "C. Africa", "oncho_stop_mda_year": null, "oem_status": "Not started", "diseases": {"Onchocerciasis": {"status": "Endemic-Active MDA", "challenges": ["No National Committee for Elimination of Onchocerciasis exists in Gabon, lacking governance and coordination structure.", "No cross-border collaboration has been established with neighboring countries despite geographic proximity to endemic regions.", "National NTD Master Plan 2024-2028 exists but coordination mechanisms for onchocerciasis elimination are not operational."], "actions": ["Establish National Committee for Elimination of Onchocerciasis with formal governance structure and regular meeting schedule.", "Conduct baseline mapping to determine endemic status and treatment needs."]}, "Lymphatic Filariasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Establish lymphatic filariasis program and baseline mapping."]}, "Trachoma": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Assess trachoma endemicity in Gabon."]}, "Schistosomiasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Conduct schistosomiasis mapping and surveillance system."]}, "STH": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Implement integrated STH and schistosomiasis program."]}}, "key_themes": ["Governance & Coordination"], "overall_status": "Critical", "top_priority_action": "Establish National Committee for Elimination of Onchocerciasis and conduct baseline mapping to guide programming."}, "Ghana": {"region": "W. Africa", "oncho_stop_mda_year": 2035, "oem_status": "Complete", "diseases": {"Onchocerciasis": {"status": "Post-MDA Surveillance", "challenges": ["Full reporting of all implementation unit results through WHO Annual Program Review Form is incomplete despite completed mapping.", "Challenges with ESPEN Collect data gathering led to development of internal tools, but technical support issues required resolution.", "Stop Mass Drug Administration processes are ongoing in operational transmission zones with monitoring and endline surveys near completion."], "actions": ["Ensure complete submission of all onchocerciasis mapping results and impact assessment data to WHO APRF.", "Provide feedback on ESPEN Collect issues to improve data collection tools and processes globally."]}, "Lymphatic Filariasis": {"status": "Endemic-Active MDA", "challenges": ["Lymphatic filariasis co-implementation with onchocerciasis is planned but medicine supply chain challenges delay coordination."], "actions": ["Establish coordinated ivermectin-albendazole distribution platform for integrated delivery."]}, "Trachoma": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents but appears not to be a priority endemic disease."], "actions": ["Assess trachoma status if elimination program exists."]}, "Schistosomiasis": {"status": "Endemic-Active MDA", "challenges": ["Medicine supply chain challenges are causing delays in Praziquantel procurement, restricting co-implementation of schistosomiasis and malaria programs.", "Lack of treatment for 2-to-5-year age group and insufficient supplies to expand MDA countrywide."], "actions": ["Develop alternative procurement strategy for praziquantel and establish budget allocation for countrywide expansion.", "Include 2-to-5-year age group in schistosomiasis MDA through targeted distribution strategy."]}, "STH": {"status": "Endemic-Active MDA", "challenges": ["Ghana possesses technical expertise for STH programs but supply constraints limit countrywide distribution."], "actions": ["Leverage malaria program's bed net distribution platform to integrate STH and schistosomiasis MDA."]}}, "key_themes": ["Programme Capacity & Access", "Surveillance & Data", "Health System Integration"], "overall_status": "On Track", "top_priority_action": "Complete all onchocerciasis mapping data submission to WHO and resolve praziquantel supply chain challenges for schistosomiasis program."}, "Guinea": {"region": "W. Africa", "oncho_stop_mda_year": null, "oem_status": "Not started", "diseases": {"Onchocerciasis": {"status": "Endemic-Active MDA", "challenges": ["National Committee for Elimination of Onchocerciasis meeting was not held in 2025 due to lack of funding for committee activities.", "Meeting scheduled for February 2026 depends on committee functionality and operational resources.", "Baseline mapping and epidemiological assessment status not clearly documented in available responses."], "actions": ["Secure operational funding for CNEO to resume regular meeting schedule with quarterly oversight.", "Conduct comprehensive baseline mapping to establish endemic zones and treatment priorities."]}, "Lymphatic Filariasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Establish lymphatic filariasis program structure and baseline mapping."]}, "Trachoma": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Assess trachoma endemicity and determine programming needs."]}, "Schistosomiasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Conduct schistosomiasis mapping and establish surveillance system."]}, "STH": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Implement school-based STH and schistosomiasis MDA program."]}}, "key_themes": ["Governance & Coordination", "Financing & Sustainability"], "overall_status": "At Risk", "top_priority_action": "Secure funding for CNEO operations and conduct baseline onchocerciasis mapping."}, "Guinea-Bissau": {"region": "W. Africa", "oncho_stop_mda_year": null, "oem_status": "Not started", "diseases": {"Onchocerciasis": {"status": "Endemic-Active MDA", "challenges": ["National Onchocerciasis Elimination Committee (NOEC) held meeting in December 2024 with follow-up meeting postponed to March 2026, indicating irregular meeting pattern.", "No cross-border collaboration has been established with neighboring countries despite geographic proximity.", "National NTD Master Plan 2023-2027 is in place but cross-border cooperation mechanisms are not operational."], "actions": ["Establish regular NOEC meeting schedule with documented proceedings and progress tracking.", "Initiate discussions with neighboring countries to develop cross-border operational frameworks."]}, "Lymphatic Filariasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Establish lymphatic filariasis elimination program baseline."]}, "Trachoma": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Determine trachoma endemicity and programming needs."]}, "Schistosomiasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Conduct baseline schistosomiasis mapping."]}, "STH": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Implement school-based STH program aligned with schistosomiasis."]}}, "key_themes": ["Governance & Coordination"], "overall_status": "At Risk", "top_priority_action": "Formalize NOEC meeting schedule and initiate cross-border negotiations with neighboring countries."}, "Kenya": {"region": "E. Africa", "oncho_stop_mda_year": null, "oem_status": "Partial", "diseases": {"Onchocerciasis": {"status": "Post-MDA Surveillance", "challenges": ["Onchocerciasis elimination mapping has not been completed despite priority status, with goal for completion in former endemic areas by June 2026.", "Funding is lacking for work in areas outside former endemic zones, limiting comprehensive baseline assessment.", "Periodic monitoring and impact assessments recommended every five years had not been conducted, stemming from decades without comprehensive MDA."], "actions": ["Secure funding for completion of onchocerciasis elimination mapping in former endemic areas by June 2026.", "Develop elimination dossier alongside entomological and human epidemiological surveillance activities."]}, "Lymphatic Filariasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Assess lymphatic filariasis endemicity in border areas."]}, "Trachoma": {"status": "Post-MDA Surveillance", "challenges": ["Trachoma focus includes clearing backlog of trachomatous trichiasis cases through camp-based surgery.", "Supply of antibiotics relies on global Pfizer donation, creating ongoing supply challenges and sustainability concerns."], "actions": ["Develop local antibiotic procurement strategy to supplement Pfizer donations for trachoma elimination.", "Implement camp-based TT surgery strategy to reduce backlog and transition to integration."]}, "Schistosomiasis": {"status": "Endemic-Active MDA", "challenges": ["Forecasting and local procurement of praziquantel remain major challenges despite MDA targets exceeding 75% global minimum.", "Case management for schistosomiasis morbidity is weak, though pilot referral pathways through cervical cancer screening have begun."], "actions": ["Develop alternative procurement strategy for praziquantel with domestic production consideration.", "Scale referral pathway pilot beyond 2 counties to improve morbidity case management."]}, "STH": {"status": "Endemic-Active MDA", "challenges": ["Soil-transmitted helminthiasis programming is linked to schistosomiasis supply chain challenges."], "actions": ["Establish school-based STH screening and integrated treatment platform."]}}, "key_themes": ["Surveillance & Data", "Programme Capacity & Access", "Financing & Sustainability"], "overall_status": "At Risk", "top_priority_action": "Secure funding for onchocerciasis elimination mapping completion by June 2026 and develop local praziquantel procurement strategy."}, "Liberia": {"region": "W. Africa", "oncho_stop_mda_year": 2030, "oem_status": "Complete", "diseases": {"Onchocerciasis": {"status": "Post-MDA Surveillance", "challenges": ["Onchocerciasis mapping is complete across 15 counties with pre-treatment assessment survey planned, though OEM completion status requires clarification.", "Full national stop Mass Drug Administration is estimated for 2030, requiring sustained treatment in remaining endemic areas.", "Laboratory work and GIS capacity for breeding site assessments are critical gaps limiting surveillance intensification."], "actions": ["Complete pre-treatment assessment survey and conduct breeding site assessments for vector surveillance.", "Establish dedicated laboratory and GIS training program for entomological and epidemiological surveillance."]}, "Lymphatic Filariasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Assess lymphatic filariasis status and establish program if endemic."]}, "Trachoma": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Determine trachoma endemicity in Liberia."]}, "Schistosomiasis": {"status": "Endemic-Active MDA", "challenges": ["Major challenges for schistosomiasis include lack of dedicated partner supporting Mass Drug Administration and inability to conduct impact surveys without external support.", "Data analysis capacity for impact assessments is dependent on external technical assistance."], "actions": ["Secure dedicated partner funding for schistosomiasis MDA and develop capacity for impact survey analysis.", "Strengthen surveillance systems with integrated data analysis training."]}, "STH": {"status": "Endemic-Active MDA", "challenges": ["Soil-transmitted helminthiasis programming faces similar funding and capacity constraints as schistosomiasis."], "actions": ["Develop comprehensive elimination plan and revised master plan to secure adequate partner support."]}}, "key_themes": ["Surveillance & Data", "Financing & Sustainability", "Programme Capacity & Access"], "overall_status": "At Risk", "top_priority_action": "Complete breeding site assessments and secure dedicated partner funding for schistosomiasis MDA and surveillance."}, "Malawi": {"region": "S. Africa", "oncho_stop_mda_year": 2030, "oem_status": "Complete", "diseases": {"Onchocerciasis": {"status": "Post-MDA Surveillance", "challenges": ["Onchocerciasis elimination mapping is finalized countrywide with 10 endemic districts identified and MDA being conducted.", "Target year for MDA stoppage is 2030 in 7 of 10 endemic districts, though recent addition of 2 new districts delays overall timeline.", "Moxidectin introduction is suggested as innovation to accelerate transmission interruption in remaining districts."], "actions": ["Conduct routine monitoring and impact assessments in sentinel sites to document progress toward transmission interruption.", "Evaluate moxidectin introduction for districts facing transmission challenges."]}, "Lymphatic Filariasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Assess lymphatic filariasis status if endemic."]}, "Trachoma": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Determine trachoma endemicity in Malawi."]}, "Schistosomiasis": {"status": "Endemic-Active MDA", "challenges": ["Insufficient human resource capacity exists at district level for schistosomiasis and STH programs, limiting effective implementation.", "Implementation gaps include snail control, operational research, surveillance, and advanced data analysis capabilities."], "actions": ["Provide specialized training for district-level focal persons on schistosomiasis surveillance and data analysis.", "Implement snail control pilot program in selected transmission zones."]}, "STH": {"status": "Endemic-Active MDA", "challenges": ["Medicine supply chain challenges include delays in collecting unused drugs and short expiry dates for donated praziquantel."], "actions": ["Establish better drug inventory management guidance and improve distribution protocols."]}}, "key_themes": ["Surveillance & Data", "Programme Capacity & Access", "Health System Integration"], "overall_status": "On Track", "top_priority_action": "Provide specialized training for district-level schistosomiasis staff and improve medicine supply chain management."}, "Mali": {"region": "W. Africa", "oncho_stop_mda_year": null, "oem_status": "Unknown", "diseases": {"Onchocerciasis": {"status": "Data Gap", "challenges": ["Interview summary indicates discussion of transmission control processes and program integration strategy, but specific disease status is not clearly articulated.", "Administrative and financial planning aspects are documented but epidemiological baseline and program performance data are unclear."], "actions": ["Establish clarity on onchocerciasis endemicity status and transmission zones across Mali."]}, "Lymphatic Filariasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Conduct baseline mapping for lymphatic filariasis."]}, "Trachoma": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Assess trachoma endemicity in Mali."]}, "Schistosomiasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Implement schistosomiasis mapping and baseline assessment."]}, "STH": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Develop integrated STH and schistosomiasis control program."]}}, "key_themes": ["Governance & Coordination", "Financing & Sustainability"], "overall_status": "Critical", "top_priority_action": "Clarify onchocerciasis disease status and establish baseline epidemiological data for all five PC-NTDs."}, "Mozambique": {"region": "S. Africa", "oncho_stop_mda_year": null, "oem_status": "Not started", "diseases": {"Onchocerciasis": {"status": "Endemic-Active MDA", "challenges": ["Onchocerciasis elimination mapping has not been completed due to cut in external funding, with 92 districts still requiring mapping.", "Parallel vector control measures in high-risk areas are not being implemented despite being identified as priority innovation.", "Government ownership and national investment are critically low, with programs heavily dependent on external funding."], "actions": ["Mobilize national government funding and international donor support to complete elimination mapping in 92 districts.", "Pilot parallel vector control measures in selected high-transmission districts."]}, "Lymphatic Filariasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Assess lymphatic filariasis status and establish program if endemic."]}, "Trachoma": {"status": "Post-MDA Surveillance", "challenges": ["Trachomatous trichiasis surgery has been conducted but supply and distribution of antibiotics presents major constraint.", "High cost of customs clearance for donated azithromycin is creating financial risk to program continuation."], "actions": ["Secure government exemption or subsidy for customs clearance of donated antibiotics.", "Develop alternative antibiotic procurement strategy to reduce import costs."]}, "Schistosomiasis": {"status": "Endemic-Active MDA", "challenges": ["Schistosomiasis surveillance and reporting gaps indicate insufficient program integration and data systems."], "actions": ["Establish active surveillance system and integrate into national health information system."]}, "STH": {"status": "Endemic-Active MDA", "challenges": ["Soil-transmitted helminthiasis programming status requires clarification and baseline documentation."], "actions": ["Conduct baseline mapping and establish school-based MDA program."]}}, "key_themes": ["Financing & Sustainability", "Surveillance & Data", "Health System Integration"], "overall_status": "Critical", "top_priority_action": "Secure government funding for onchocerciasis elimination mapping completion and resolve antibiotic customs clearance issues for trachoma program."}, "Niger": {"region": "W. Africa", "oncho_stop_mda_year": null, "oem_status": "Complete", "diseases": {"Onchocerciasis": {"status": "Post-MDA Surveillance", "challenges": ["Onchocerciasis elimination mapping has been completed with transition to post-disposal surveillance in border health districts.", "Cross-border collaboration exists tacitly between border health districts but lacks formal operational agreement.", "Surveillance data exchange is operational for cross-border detection but not systematized."], "actions": ["Formalize cross-border collaboration agreement between Niger and neighboring countries for coordinated surveillance.", "Strengthen post-disposal surveillance system with entomological monitoring at border sites."]}, "Lymphatic Filariasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Assess lymphatic filariasis status and determine programming needs."]}, "Trachoma": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Determine trachoma endemicity in Niger."]}, "Schistosomiasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Conduct schistosomiasis mapping and baseline assessment."]}, "STH": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Establish school-based STH and schistosomiasis control program."]}}, "key_themes": ["Governance & Coordination", "Surveillance & Data"], "overall_status": "On Track", "top_priority_action": "Formalize cross-border surveillance agreement and strengthen post-disposal surveillance system for onchocerciasis."}, "Nigeria": {"region": "W. Africa", "oncho_stop_mda_year": null, "oem_status": "Unknown", "diseases": {"Onchocerciasis": {"status": "Endemic-Active MDA", "challenges": ["National Onchocerciasis Elimination Committee (NOEC) exists but cross-border collaboration with Cameroon and Benin remains in discussion phase.", "No formal operational cross-border work plans or health teams have been established despite regional proximity and transmission links.", "Memorandum of Understanding for cross-border NTD collaboration is under ministerial review, pending legal department approval."], "actions": ["Accelerate finalization of cross-border MoU with Cameroon and Benin for operationalization of joint activities.", "Establish cross-border health teams for synchronized mapping, MDA, and surveillance activities."]}, "Lymphatic Filariasis": {"status": "Endemic-Active MDA", "challenges": ["Lymphatic filariasis program coordination exists through National Elimination Technical Working Group but integration challenges remain."], "actions": ["Integrate lymphatic filariasis with onchocerciasis MDA through coordinated drug procurement and distribution."]}, "Trachoma": {"status": "Endemic-Active MDA", "challenges": ["National Trachoma Taskforce exists but disease-specific implementation details are not fully documented."], "actions": ["Establish clear trachoma elimination milestones and monitoring framework."]}, "Schistosomiasis": {"status": "Endemic-Active MDA", "challenges": ["National Schistosomiasis Elimination Technical Working Group coordinates activities but integration challenges limit effectiveness."], "actions": ["Develop integrated schistosomiasis and STH control strategy with coordinated financing."]}, "STH": {"status": "Endemic-Active MDA", "challenges": ["Soil-transmitted helminthiasis programming is linked to schistosomiasis coordination and financing."], "actions": ["Establish school-based STH and schistosomiasis integrated platform."]}}, "key_themes": ["Governance & Coordination", "Health System Integration"], "overall_status": "At Risk", "top_priority_action": "Accelerate cross-border Memorandum of Understanding finalization with Cameroon and Benin and establish integrated disease control mechanisms."}, "Senegal": {"region": "W. Africa", "oncho_stop_mda_year": 2026, "oem_status": "Complete", "diseases": {"Onchocerciasis": {"status": "Post-MDA Surveillance", "challenges": ["Onchocerciasis mapping is complete and program is in post-treatment surveillance phase with data from 2023-2024 being validated.", "PCR analysis of blackfly samples at WHO Ouagadougou laboratory requires 10-15 days per sample, creating delays in results and requiring Senegalese technician deployment.", "Capacity building in molecular diagnostics is needed to establish in-country PCR analysis capability."], "actions": ["Establish in-country capacity for blackfly PCR analysis through technology transfer and training of Senegalese laboratory technicians.", "Complete validation of surveillance data and update Genarf 2026 system with 2023-2024 surveillance findings."]}, "Lymphatic Filariasis": {"status": "Post-MDA Surveillance", "challenges": ["Lymphatic filariasis is supported by USAID via FHI 360 with TAS 3 conducted in 38 districts for 2026 elimination goal.", "Activity delays occurred in 2025 but program is working toward formal African Union submission for elimination validation."], "actions": ["Expedite African Union documentation submission for lymphatic filariasis elimination validation."]}, "Trachoma": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Determine trachoma status in Senegal."]}, "Schistosomiasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Assess schistosomiasis endemicity and programming needs."]}, "STH": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Conduct baseline assessment for soil-transmitted helminthiasis."]}}, "key_themes": ["Surveillance & Data", "Programme Capacity & Access"], "overall_status": "On Track", "top_priority_action": "Establish in-country PCR analysis capacity for blackfly diagnostics and expedite African Union filariasis elimination submission."}, "Sierra Leone": {"region": "W. Africa", "oncho_stop_mda_year": null, "oem_status": "Unknown", "diseases": {"Onchocerciasis": {"status": "Endemic-Active MDA", "challenges": ["National Technical Advisory Committee (TAC) oversees elimination of onchocerciasis, lymphatic filariasis, and schistosomiasis with meetings in October 2024 and December 2025.", "Cross-border collaboration is established with Liberia and Guinea with harmonized MDA schedules and joint supervision activities.", "Mapping synchronization has not yet been achieved despite harmonized MDA schedules in border communities."], "actions": ["Establish formal cross-border coordination protocol for synchronized mapping in border zones.", "Document and formalize joint surveillance and data exchange procedures with Liberia and Guinea."]}, "Lymphatic Filariasis": {"status": "Endemic-Active MDA", "challenges": ["Lymphatic filariasis is under coordinated TAC oversight with cross-border MDA harmonization."], "actions": ["Establish filariasis impact assessment schedule aligned with cross-border coordination."]}, "Trachoma": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Assess trachoma endemicity in Sierra Leone."]}, "Schistosomiasis": {"status": "Endemic-Active MDA", "challenges": ["Schistosomiasis is under TAC coordination with cross-border MDA harmonization in place."], "actions": ["Establish schistosomiasis surveillance and impact assessment system."]}, "STH": {"status": "Endemic-Active MDA", "challenges": ["Soil-transmitted helminthiasis coordination occurs through schistosomiasis program activities."], "actions": ["Establish integrated STH and schistosomiasis monitoring framework."]}}, "key_themes": ["Governance & Coordination", "Health System Integration"], "overall_status": "On Track", "top_priority_action": "Formalize cross-border mapping coordination with Liberia and Guinea and document joint surveillance protocols."}, "Tanzania": {"region": "E. Africa", "oncho_stop_mda_year": 2033, "oem_status": "Partial", "diseases": {"Onchocerciasis": {"status": "Post-MDA Surveillance", "challenges": ["Onchocerciasis elimination mapping is complete in all but 2 units (Mete and Wang) which will undergo monitoring survey in 2026-2027 fiscal year.", "Full national stop MDA is anticipated for 2033, with bi-annual treatment frequency and test-and-treat in hotspots being implemented as acceleration strategy.", "Surveillance lacks dedicated funding despite being essential for post-MDA monitoring."], "actions": ["Complete monitoring survey for Mete and Wang units and integrate findings into national elimination timeline.", "Secure dedicated funding for post-MDA surveillance system to document transmission interruption."]}, "Lymphatic Filariasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Assess lymphatic filariasis status and establish baseline."]}, "Trachoma": {"status": "Post-MDA Surveillance", "challenges": ["Trachoma program utilizes 4 Head Start mannequins for surgeon training with 3-6 month post-operative follow-up schedule for TT cases."], "actions": ["Expand trachoma surgeon network and establish TT case management protocols."]}, "Schistosomiasis": {"status": "Endemic-Active MDA", "challenges": ["Schistosomiasis program faces critical gap in dedicated subnational staff for surveillance and implementation oversight.", "Lack of recent impact assessments with reliance on 20-year-old prevalence data in some areas requires urgent updating."], "actions": ["Conduct impact assessments in all schistosomiasis transmission zones to establish current baseline.", "Recruit and train district-level focal persons for schistosomiasis surveillance and case management."]}, "STH": {"status": "Endemic-Active MDA", "challenges": ["Soil-transmitted helminthiasis program lacks dedicated staff capacity at district level."], "actions": ["Develop integrated STH and schistosomiasis surveillance system with shared personnel."]}}, "key_themes": ["Surveillance & Data", "Programme Capacity & Access", "Health System Integration"], "overall_status": "On Track", "top_priority_action": "Complete monitoring surveys in remaining units and secure dedicated funding for post-MDA surveillance; conduct urgent schistosomiasis impact assessments."}, "Togo": {"region": "W. Africa", "oncho_stop_mda_year": null, "oem_status": "Partial", "diseases": {"Onchocerciasis": {"status": "Endemic-Active MDA", "challenges": ["National Committee for Elimination of Onchocerciasis (CNEO) has met regularly (September 2024, December 2025) with agenda for 2026 confirmation.", "Cross-border collaboration exists with Benin, Ghana, and Burkina Faso but is not yet fully synchronized for mapping and mass drug administration.", "Mapping data sharing between border districts has occurred but is not systematic; MDA synchronization with Benin is planned starting January-March 2025."], "actions": ["Formalize cross-border operational framework with Benin, Ghana, and Burkina Faso for coordinated mapping and MDA.", "Implement systematic data exchange protocol for border health districts to document transmission status."]}, "Lymphatic Filariasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Assess lymphatic filariasis status and determine programming needs."]}, "Trachoma": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Conduct trachoma endemicity assessment."]}, "Schistosomiasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Establish schistosomiasis baseline mapping and surveillance."]}, "STH": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Develop integrated STH and schistosomiasis program."]}}, "key_themes": ["Governance & Coordination", "Health System Integration"], "overall_status": "On Track", "top_priority_action": "Formalize cross-border operational framework with Benin, Ghana, and Burkina Faso and implement systematic data exchange protocols."}, "Uganda": {"region": "E. Africa", "oncho_stop_mda_year": 2030, "oem_status": "Complete", "diseases": {"Onchocerciasis": {"status": "Post-MDA Surveillance", "challenges": ["Onchocerciasis elimination is nearing completion with only 5 districts remaining under mass drug administration due to cross-transmission from South Sudan refugee populations.", "Cross-border transmission from refugee camps in South Sudan is complicating elimination efforts with 10 positive cases found in camps.", "Primary innovation involves treating both host communities and refugees with strengthened cross-border surveillance coordination."], "actions": ["Expand MDA to include South Sudan refugee populations in coordination with UNHCR and South Sudan program.", "Implement cross-border surveillance protocol with South Sudan to monitor refugee camp transmission sources."]}, "Lymphatic Filariasis": {"status": "Data Gap", "challenges": ["No disease-specific information available in source documents."], "actions": ["Assess lymphatic filariasis status in relation to onchocerciasis programming."]}, "Trachoma": {"status": "Post-MDA Surveillance", "challenges": ["Trachoma program has over 40 trichiasis surgeons available with fewer than 3,000 cases remaining requiring management.", "Only surgical management is offered; challenges exist with necessary training materials and equipment access."], "actions": ["Sustain current surgeon network for residual TT case management through targeted case identification."]}, "Schistosomiasis": {"status": "Endemic-Active MDA", "challenges": ["Schistosomiasis program is hampered by significant gaps in surveillance, data analysis, and program monitoring capacity affecting implementation efficiency.", "Lack of funding and drugs prevents reaching all at-risk age groups, particularly adults and pre-school-age children."], "actions": ["Strengthen district-level surveillance system with data analysis training and tools.", "Secure funding for expanded schistosomiasis MDA to include pre-school and adult age groups."]}, "STH": {"status": "Endemic-Active MDA", "challenges": ["Soil-transmitted helminthiasis program faces similar funding and capacity constraints as schistosomiasis."], "actions": ["Develop integrated STH and schistosomiasis MDA platform with shared resources and training."]}}, "key_themes": ["Governance & Coordination", "Surveillance & Data", "Programme Capacity & Access"], "overall_status": "On Track", "top_priority_action": "Expand onchocerciasis MDA to include South Sudan refugee populations and strengthen schistosomiasis surveillance capacity."}, "South Sudan": {"region": "E. Africa", "oncho_stop_mda_year": null, "oem_status": "Unknown", "diseases": {"Onchocerciasis": {"status": "Endemic-Active MDA", "challenges": ["South Sudan Onchocerciasis and Lymphatic Filariasis Elimination Experts Advisory Committee (SSOLFEEAC) held 5th meeting in March 2024 but 2025 meeting was not conducted due to financial constraints.", "Cross-border collaboration is active with Uganda and Ethiopia for synchronized MDA and data sharing, but frozen with Sudan due to current crisis.", "Cross-border collaboration with CAR, DRC, and Kenya remains to be established."], "actions": ["Secure funding for SSOLFEEAC 2026 meeting to maintain regional collaboration and oversight.", "Establish cross-border operational frameworks with CAR, DRC, and Kenya for coordinated activities."]}, "Lymphatic Filariasis": {"status": "Endemic-Active MDA", "challenges": ["Lymphatic filariasis is covered under SSOLFEEAC coordination with Uganda and Ethiopia cross-border collaboration active."], "actions": ["Maintain filariasis program funding and coordinate with Uganda-Ethiopia collaborative activities."]}, "Trachoma": {"status": "Data Gap", "challenges": ["No specific committee or documentation for trachoma program is available."], "actions": ["Assess trachoma status and establish program if needed."]}, "Schistosomiasis": {"status": "Data Gap", "challenges": ["No specific committee for schistosomiasis exists; disease status unclear."], "actions": ["Establish schistosomiasis elimination committee and conduct baseline mapping."]}, "STH": {"status": "Data Gap", "challenges": ["Soil-transmitted helminthiasis status not documented."], "actions": ["Conduct STH baseline assessment and establish control program."]}}, "key_themes": ["Governance & Coordination", "Financing & Sustainability"], "overall_status": "Critical", "top_priority_action": "Secure funding for SSOLFEEAC operations and establish cross-border frameworks with CAR, DRC, and Kenya."}};
+const COUNTRIES_ORDER = ["Benin", "Burkina Faso", "Chad", "Cote d'Ivoire", "Ghana", "Guinea", "Guinea-Bissau", "Liberia", "Mali", "Niger", "Nigeria", "Senegal", "Sierra Leone", "Togo", "Burundi", "Ethiopia", "Kenya", "South Sudan", "Tanzania", "Uganda", "CAR", "Cameroon", "Congo", "DRC", "Equatorial Guinea", "Gabon", "Angola", "Malawi", "Mozambique"];
+const DISEASES = ['Onchocerciasis','Lymphatic Filariasis','Trachoma','Schistosomiasis','STH'];
+const DISEASE_ABBR = {'Onchocerciasis':'Oncho','Lymphatic Filariasis':'LF','Trachoma':'Trachoma','Schistosomiasis':'SCH','STH':'STH'};
+const DISEASE_CLS = {'Onchocerciasis':'oncho','Lymphatic Filariasis':'lf','Trachoma':'trach','Schistosomiasis':'sch','STH':'sth'};
+const THEMES = ['Governance & Coordination','Health System Integration','Financing & Sustainability','Programme Capacity & Access','Surveillance & Data'];
+const THEME_DESC = {
+  'Governance & Coordination':'National NTD committees, cross-border coordination, MoH alignment',
+  'Health System Integration':'PHC, school health, WASH, HR, HIS, lab integration',
+  'Financing & Sustainability':'Domestic budget, donor dependency, funding gaps',
+  'Programme Capacity & Access':'Workforce, supply chain, MDA delivery, diagnostics, outreach',
+  'Surveillance & Data':'Monitoring systems, impact assessments, data reporting, mapping'
+};
+
+let selC='', selD='', selT='';
+let actSort = {col:'overall', dir:'asc'};
+let charts = {};
+
+function statusColor(s) {
+  if (!s) return 'gray';
+  if (s==='Endemic-Active MDA') return 'yellow';
+  if (s==='Post-MDA Surveillance') return 'blue';
+  if (s==='Eliminated/Not Endemic') return 'green';
+  if (s==='Data Gap') return 'gray';
+  return 'gray';
+}
+function statusBadge(s) {
+  const col = statusColor(s);
+  const short = {
+    'Endemic-Active MDA':'Active MDA',
+    'Post-MDA Surveillance':'Post-MDA',
+    'Eliminated/Not Endemic':'Elim.',
+    'Data Gap':'—'
+  }[s] || s;
+  return `<span class="badge ${col}">${short}</span>`;
+}
+function overallColor(s) {
+  return s==='On Track'?'green': s==='At Risk'?'yellow': s==='Critical'?'red':'gray';
+}
+function oemColor(s) {
+  return s==='Complete'?'green': s==='Partial'?'yellow': s==='Not started'?'red':'gray';
+}
+
+function getFiltered() {
+  return COUNTRIES_ORDER.filter(name => {
+    const c = RAW[name]; if (!c) return false;
+    if (selC && name!==selC) return false;
+    if (selT && !(c.key_themes||[]).includes(selT)) return false;
+    if (selD) {
+      const dis = c.diseases?.[selD];
+      if (!dis || dis.status==='Data Gap') return false;
+    }
+    return true;
+  });
+}
+
+function init() {
+  const sel = document.getElementById('sel-c');
+  COUNTRIES_ORDER.forEach(n => {
+    const o = document.createElement('option'); o.value=n; o.textContent=n; sel.appendChild(o);
+  });
+  renderAll();
+}
+
+function applyFilters() {
+  selC = document.getElementById('sel-c').value;
+  selD = document.getElementById('sel-d').value;
+  selT = document.getElementById('sel-t').value;
+  renderAll();
+}
+function resetFilters() {
+  selC=selD=selT='';
+  ['sel-c','sel-d','sel-t'].forEach(id => document.getElementById(id).value='');
+  renderAll();
+}
+
+function renderAll() {
+  const names = getFiltered();
+  renderKPIs(names);
+  renderMatrix(names);
+  if (selC && RAW[selC]) renderDetail(selC); else document.getElementById('dpanel').style.display='none';
+  renderCharts(names);
+  renderActions(names);
+}
+
+// ── KPIs ──────────────────────────────
+function renderKPIs(names) {
+  let g=0,y=0,r=0,oem=0,dg=0;
+  names.forEach(n => {
+    const c = RAW[n];
+    const s = c.overall_status;
+    if(s==='On Track') g++; else if(s==='At Risk') y++; else if(s==='Critical') r++;
+    if(c.oem_status==='Complete') oem++;
+    DISEASES.forEach(d => { if(c.diseases?.[d]?.status==='Data Gap') dg++; });
+  });
+  document.getElementById('kn').textContent = names.length;
+  document.getElementById('kg').textContent = g;
+  document.getElementById('ky').textContent = y;
+  document.getElementById('kr').textContent = r;
+  document.getElementById('koem').textContent = oem;
+  document.getElementById('kdg').textContent = dg;
+}
+
+// ── MATRIX ────────────────────────────
+function renderMatrix(names) {
+  const tbody = document.getElementById('mbody');
+  tbody.innerHTML = '';
+  names.forEach(name => {
+    const c = RAW[name];
+    const oc = overallColor(c.overall_status);
+    const oemc = oemColor(c.oem_status||'Unknown');
+    const tr = document.createElement('tr');
+    if (selC===name) tr.classList.add('sel');
+    tr.addEventListener('click', () => { selC=name; document.getElementById('sel-c').value=name; renderAll(); setTimeout(()=>document.getElementById('dpanel').scrollIntoView({behavior:'smooth'}),100); });
+
+    let row = `<td><strong>${name}</strong><button class="det-link" onclick="event.stopPropagation();openModal('${name.replace(/'/g,"\\'")}')">Details ›</button></td>
+      <td><span class="rtag">${c.region}</span></td>
+      <td><span class="badge ${oc}">${c.overall_status||'?'}</span></td>
+      <td><span class="badge ${oemc}" title="OEM: ${c.oem_status}">${c.oem_status||'?'}</span></td>`;
+
+    DISEASES.forEach(d => {
+      const dis = c.diseases?.[d];
+      const s = dis?.status||'Data Gap';
+      const col = statusColor(s);
+      const abbr = {
+        'Endemic-Active MDA':'Active MDA',
+        'Post-MDA Surveillance':'Post-MDA',
+        'Eliminated/Not Endemic':'Elim.',
+        'Data Gap':'—'
+      }[s]||s;
+      row += `<td style="text-align:center;"><span class="badge ${col}" onclick="event.stopPropagation();filterDisease('${d}')">${abbr}</span></td>`;
+    });
+
+    tr.innerHTML = row;
+    tbody.appendChild(tr);
+  });
+  if (!names.length) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = '<td colspan="9" class="nodata">No countries match current filters.</td>';
+    tbody.appendChild(tr);
+  }
+}
+
+function filterDisease(d) {
+  selD = selD===d ? '' : d;
+  document.getElementById('sel-d').value = selD;
+  renderAll();
+}
+
+// ── DETAIL ────────────────────────────
+function renderDetail(name) {
+  const c = RAW[name];
+  const panel = document.getElementById('dpanel');
+  panel.style.display = 'block';
+
+  const oc = overallColor(c.overall_status);
+  const stopMDA = c.oncho_stop_mda_year ? `STOP MDA target: <strong>${c.oncho_stop_mda_year}</strong>` : '';
+  const oemc = oemColor(c.oem_status||'Unknown');
+
+  // Thematic area cards
+  const thCards = THEMES.map(t => {
+    const active = (c.key_themes||[]).includes(t);
+    return `<div class="th-card ${active?'active':''}">
+      <h4>${t}</h4>
+      <p>${active?'⚠ Issues identified':'✓ No major issues noted'}</p>
+      <p style="font-size:10px;margin-top:2px;">${THEME_DESC[t]}</p>
+    </div>`;
+  }).join('');
+
+  // Disease cards
+  const dscol = {'Onchocerciasis':'var(--oncho)','Lymphatic Filariasis':'var(--lf)','Trachoma':'var(--trach)','Schistosomiasis':'var(--sch)','STH':'var(--sth)'};
+  const dsbg = {'Onchocerciasis':'var(--oncho-bg)','Lymphatic Filariasis':'var(--lf-bg)','Trachoma':'var(--trach-bg)','Schistosomiasis':'var(--sch-bg)','STH':'var(--sth-bg)'};
+
+  const disCards = DISEASES.map(d => {
+    const dis = c.diseases?.[d]; if (!dis) return '';
+    const scol = statusColor(dis.status);
+    const s = dis.status||'Data Gap';
+    const cls = DISEASE_CLS[d];
+    const challenges = (dis.challenges||[]).map(ch => `<li>${ch}</li>`).join('');
+    const actions = (dis.actions||[]).map(a => `<div class="act-item" style="border-left-color:${dscol[d]}">${a}</div>`).join('');
+    const statusLabel = {
+      'Endemic-Active MDA':'🔴 Active MDA',
+      'Post-MDA Surveillance':'🔵 Post-MDA Surveillance',
+      'Eliminated/Not Endemic':'🟢 Eliminated / Not Endemic',
+      'Data Gap':'⚫ Data Gap'
+    }[s]||s;
+
+    return `<div class="dcard" style="background:${dsbg[d]};border-color:${dscol[d]}33;">
+      <div class="dcard-head">
+        <div class="dot" style="background:${dscol[d]}"></div>
+        <h4 style="color:${dscol[d]}">${d}</h4>
+        <span class="status-pill ${scol}" style="background:rgba(255,255,255,.7);">${statusLabel}</span>
+      </div>
+      ${challenges ? `<span class="sect-lbl">Challenges</span><ul class="chal-list">${challenges}</ul>` : ''}
+      ${actions ? `<span class="sect-lbl">Recommended Actions</span>${actions}` : ''}
+    </div>`;
+  }).join('');
+
+  panel.innerHTML = `
+    <div class="dhead">
+      <div>
+        <h2>${name}</h2>
+        <div class="dmeta">${c.region} · ${stopMDA} · OEM: ${c.oem_status||'Unknown'}</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span class="badge ${oc}" style="padding:5px 12px;font-size:13px;">Overall: ${c.overall_status}</span>
+        <button onclick="selC='';document.getElementById('sel-c').value='';renderAll();" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:#fff;padding:4px 10px;border-radius:5px;cursor:pointer;font-size:11px;">✕ Close</button>
+      </div>
+    </div>
+    <div class="dbody">
+      <span class="sect-lbl">Thematic Areas Assessment</span>
+      <div class="thematic-grid">${thCards}</div>
+      <span class="sect-lbl">Disease-by-Disease Breakdown</span>
+      <div class="disease-grid">${disCards}</div>
+      ${c.top_priority_action ? `<div class="priority-box"><div class="plbl">🎯 Top Priority Action</div><p>${c.top_priority_action}</p></div>` : ''}
+    </div>`;
+}
+
+// ── CHARTS ────────────────────────────
+function renderCharts(names) {
+  renderRegionChart(names);
+  renderDiseaseChart(names);
+  renderThemeChart(names);
+  renderOEMChart(names);
+}
+
+function renderRegionChart(names) {
+  const ctx = document.getElementById('ch-region').getContext('2d');
+  if (charts.region) charts.region.destroy();
+  const regions = ['W. Africa','E. Africa','C. Africa','S. Africa'];
+  const gData=[], yData=[], rData=[];
+  regions.forEach(reg => {
+    let g=0,y=0,r=0;
+    names.forEach(n => { if(RAW[n].region===reg) {
+      const s=RAW[n].overall_status;
+      if(s==='On Track')g++; else if(s==='At Risk')y++; else if(s==='Critical')r++;
+    }});
+    gData.push(g); yData.push(y); rData.push(r);
+  });
+  charts.region = new Chart(ctx, {
+    type:'bar',
+    data:{ labels:regions, datasets:[
+      {label:'On Track',data:gData,backgroundColor:'#bbf7d0',borderColor:'#16a34a',borderWidth:1,borderRadius:3},
+      {label:'At Risk',data:yData,backgroundColor:'#fde68a',borderColor:'#b45309',borderWidth:1,borderRadius:3},
+      {label:'Critical',data:rData,backgroundColor:'#fca5a5',borderColor:'#dc2626',borderWidth:1,borderRadius:3},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{usePointStyle:true,padding:12,font:{size:10}}}},
+      scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,beginAtZero:true,ticks:{stepSize:1}}}
+    }
+  });
+}
+
+function renderDiseaseChart(names) {
+  const ctx = document.getElementById('ch-disease').getContext('2d');
+  if (charts.disease) charts.disease.destroy();
+  const labels = ['Oncho','LF','Trachoma','SCH','STH'];
+  const mda=[], postmda=[], elim=[], gap=[];
+  DISEASES.forEach(d => {
+    let a=0,p=0,e=0,g=0;
+    names.forEach(n => {
+      const s = RAW[n].diseases?.[d]?.status||'Data Gap';
+      if(s==='Endemic-Active MDA')a++;
+      else if(s==='Post-MDA Surveillance')p++;
+      else if(s==='Eliminated/Not Endemic')e++;
+      else g++;
+    });
+    mda.push(a); postmda.push(p); elim.push(e); gap.push(g);
+  });
+  charts.disease = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[
+      {label:'Active MDA',data:mda,backgroundColor:'#fde68a',borderColor:'#b45309',borderWidth:1,borderRadius:3},
+      {label:'Post-MDA Surveillance',data:postmda,backgroundColor:'#bfdbfe',borderColor:'#1565c0',borderWidth:1,borderRadius:3},
+      {label:'Eliminated/Not Endemic',data:elim,backgroundColor:'#bbf7d0',borderColor:'#16a34a',borderWidth:1,borderRadius:3},
+      {label:'Data Gap',data:gap,backgroundColor:'#e5e7eb',borderColor:'#9ca3af',borderWidth:1,borderRadius:3},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{usePointStyle:true,padding:10,font:{size:10}}}},
+      scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,beginAtZero:true,ticks:{stepSize:2}}}
+    }
+  });
+}
+
+function renderThemeChart(names) {
+  const ctx = document.getElementById('ch-theme').getContext('2d');
+  if (charts.theme) charts.theme.destroy();
+  const shortThemes = ['Governance','Health Integration','Financing','Capacity','Surveillance'];
+  const counts = THEMES.map(t => names.filter(n => (RAW[n].key_themes||[]).includes(t)).length);
+  charts.theme = new Chart(ctx, {
+    type:'bar',
+    data:{ labels:shortThemes, datasets:[{
+      label:'Countries with issues',
+      data:counts,
+      backgroundColor:['#bfdbfe','#fde68a','#fca5a5','#d8b4fe','#a7f3d0'],
+      borderColor:['#1565c0','#b45309','#dc2626','#7c3aed','#047857'],
+      borderWidth:1, borderRadius:4
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:10}}},y:{beginAtZero:true,ticks:{stepSize:2}}}
+    }
+  });
+}
+
+function renderOEMChart(names) {
+  const ctx = document.getElementById('ch-oem').getContext('2d');
+  if (charts.oem) charts.oem.destroy();
+  const statuses = ['Complete','Partial','Not started','Unknown'];
+  const counts = statuses.map(s => names.filter(n => RAW[n].oem_status===s).length);
+  charts.oem = new Chart(ctx, {
+    type:'doughnut',
+    data:{ labels:statuses, datasets:[{
+      data:counts,
+      backgroundColor:['#bbf7d0','#fde68a','#fca5a5','#e5e7eb'],
+      borderColor:['#16a34a','#b45309','#dc2626','#9ca3af'],
+      borderWidth:2
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
+      plugins:{legend:{position:'right',labels:{usePointStyle:true,padding:12,font:{size:10}}}}
+    }
+  });
+}
+
+// ── THEMATIC SUMMARY MODAL ───────────
+const THEME_META = {
+  'Governance & Coordination': {
+    icon:'🏛',
+    keywords:['committee','noec','cneo','cross-border','coordinat','governance','ministr','bilateral','agreement','regional','transboundary','joint','plan','stakeholder'],
+    intro: 'This thematic area covers national disease committees, cross-border collaboration, and coordination between the Ministry of Health and other sectors.'
+  },
+  'Health System Integration': {
+    icon:'🏥',
+    keywords:['integrat','primary health','phc','wash','school','routine','mainstream','platform','community health','health system','lab','laborator','hospital','referral','his','data system'],
+    intro: 'This thematic area examines how PC-NTD services are embedded within broader health system platforms, including primary care, school health, WASH, and health information systems.'
+  },
+  'Financing & Sustainability': {
+    icon:'💰',
+    keywords:['fund','financ','budget','donor','sustainab','cost','resource','usaid','partner','grant','investment','domestic','allocation','gap','deficit'],
+    intro: 'This thematic area addresses domestic budget contributions, dependence on external donors, and the mechanisms in place to sustain NTD programmes beyond current funding cycles.'
+  },
+  'Programme Capacity & Access': {
+    icon:'⚙️',
+    keywords:['workforce','staff','capacity','train','supply','drug','medicine','procur','mda','coverage','reach','access','diagnos','surgeon','personnel','human resource','distribution','stockout','shortage','forecast'],
+    intro: 'This thematic area covers trained workforce availability, medicine supply chains, MDA coverage, diagnostics availability, and strategies to reach hard-to-access populations.'
+  },
+  'Surveillance & Data': {
+    icon:'📊',
+    keywords:['surveillance','monitor','mapping','oem','data','assessment','report','survey','prevalence','indicator','espen','aprf','sentinel','impact assess','pcr','serology','diagnostic','genarf'],
+    intro: 'This thematic area evaluates the quality and timeliness of epidemiological monitoring, impact assessments, mapping, and use of data for programme decision-making.'
+  }
+};
+
+function scoreText(text, keywords) {
+  const t = text.toLowerCase();
+  return keywords.filter(k => t.includes(k)).length;
+}
+
+function buildThematicSummary(name) {
+  const c = RAW[name];
+  const themes = Object.keys(THEME_META);
+  const sections = [];
+
+  themes.forEach(theme => {
+    const meta = THEME_META[theme];
+    const hasIssue = (c.key_themes||[]).includes(theme);
+
+    // Collect disease-level content relevant to this theme
+    const relevantChallenges = [];
+    const relevantActions = [];
+
+    Object.entries(c.diseases||{}).forEach(([disease, info]) => {
+      if (!info || info.status === 'Data Gap') return;
+      (info.challenges||[]).forEach(ch => {
+        if (scoreText(ch, meta.keywords) > 0) relevantChallenges.push({disease, text:ch});
+      });
+      (info.actions||[]).forEach(ac => {
+        if (scoreText(ac, meta.keywords) > 0) relevantActions.push({disease, text:ac});
+      });
+    });
+
+    // Also check top priority action
+    if (c.top_priority_action && scoreText(c.top_priority_action, meta.keywords) > 0) {
+      relevantActions.push({disease:'Cross-cutting', text:c.top_priority_action});
+    }
+
+    // Build paragraphs
+    let paragraphs = [];
+
+    if (hasIssue && relevantChallenges.length > 0) {
+      // Group challenges into 1-2 paragraphs by disease
+      const grouped = {};
+      relevantChallenges.forEach(({disease, text}) => {
+        if (!grouped[disease]) grouped[disease] = [];
+        grouped[disease].push(text);
+      });
+      Object.entries(grouped).forEach(([disease, texts]) => {
+        const dLabel = disease === 'Schistosomiasis' ? 'SCH' : disease === 'Lymphatic Filariasis' ? 'LF' : disease === 'Soil-Transmitted Helminths' ? 'STH' : disease;
+        paragraphs.push(`<strong>${dLabel}:</strong> ${texts.join(' ')}`);
+      });
+    } else if (hasIssue) {
+      // Theme is flagged but no keyword-matched challenges found — use generic disease info
+      const activeDisease = Object.entries(c.diseases||{}).find(([,info]) => info.status === 'Endemic-Active MDA' || info.status === 'Post-MDA Surveillance');
+      if (activeDisease) {
+        const [disease, info] = activeDisease;
+        const topChal = (info.challenges||[])[0];
+        if (topChal) paragraphs.push(topChal);
+      }
+      if (!paragraphs.length) paragraphs.push(`This thematic area has been flagged as requiring attention in ${name}, though detailed disease-specific information on this theme was not captured in the MTR questionnaire.`);
+    } else {
+      paragraphs.push(`No major issues identified in this thematic area for ${name} during the MTR review.`);
+    }
+
+    sections.push({theme, meta, hasIssue, paragraphs, actions: relevantActions});
+  });
+
+  return sections;
+}
+
+function openModal(name) {
+  const c = RAW[name];
+  document.getElementById('modal-title').textContent = name + ' — Thematic Summary';
+
+  const oc = {Critical:'var(--red)', 'At Risk':'var(--yellow)', 'On Track':'var(--green)'}[c.overall_status]||'var(--gray)';
+  const stopMDA = c.oncho_stop_mda_year ? `Oncho STOP MDA: ${c.oncho_stop_mda_year}` : '';
+
+  let html = `<div class="modal-meta">
+    <span>${c.region}</span>
+    <span style="color:${oc};font-weight:700;">${c.overall_status}</span>
+    <span>OEM: ${c.oem_status||'Unknown'}</span>
+    ${stopMDA ? `<span>${stopMDA}</span>` : ''}
+  </div>`;
+
+  if (c.top_priority_action) {
+    html += `<div style="background:var(--ybg);border-left:4px solid var(--yellow);border-radius:0 7px 7px 0;padding:10px 14px;margin-bottom:20px;font-size:13px;line-height:1.6;">
+      <strong style="color:var(--yellow);font-size:10px;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px;">🎯 Top Priority Action</strong>
+      ${c.top_priority_action}
+    </div>`;
+  }
+
+  const sections = buildThematicSummary(name);
+  sections.forEach(({theme, meta, hasIssue, paragraphs, actions}) => {
+    const cls = hasIssue ? 'has-issues' : 'no-issues';
+    html += `<div class="th-section ${cls}">
+      <h3><span class="th-icon">${meta.icon}</span>${theme}</h3>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:8px;">${meta.intro}</p>
+      ${paragraphs.map(p => `<p>${p}</p>`).join('')}
+      ${actions.length ? `<div class="th-actions">
+        <div class="al">Recommended Actions</div>
+        ${[...new Set(actions.map(a=>a.text))].slice(0,3).map(t => `<div class="th-act">${t}</div>`).join('')}
+      </div>` : ''}
+    </div>`;
+  });
+
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-overlay').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModalDirect();
+}
+function closeModalDirect() {
+  document.getElementById('modal-overlay').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModalDirect(); });
+
+// ── ACTIONS TABLE ─────────────────────
+function sortAct(col) {
+  actSort.dir = actSort.col===col ? (actSort.dir==='asc'?'desc':'asc') : 'asc';
+  actSort.col = col;
+  const names = getFiltered();
+  renderActions(names);
+}
+
+function renderActions(names) {
+  const rows = [];
+  names.forEach(name => {
+    const c = RAW[name];
+    DISEASES.forEach(d => {
+      const dis = c.diseases?.[d];
+      if (!dis || !dis.actions) return;
+      if (selD && d!==selD) return;
+      dis.actions.forEach(a => {
+        rows.push({country:name, region:c.region, overall:c.overall_status, disease:d, action:a});
+      });
+    });
+    // Also add top priority action if no disease filter
+    if (!selD && c.top_priority_action) {
+      rows.push({country:name, region:c.region, overall:c.overall_status, disease:'Cross-cutting', action:c.top_priority_action});
+    }
+  });
+
+  const STATUS_ORD = {'Critical':0,'At Risk':1,'On Track':2};
+  rows.sort((a,b) => {
+    let av = a[actSort.col], bv = b[actSort.col];
+    if (actSort.col==='overall') { av=STATUS_ORD[av]??99; bv=STATUS_ORD[bv]??99; }
+    const c = av<bv?-1:av>bv?1:0;
+    return actSort.dir==='asc'?c:-c;
+  });
+
+  // Dedupe
+  const seen = new Set();
+  const unique = rows.filter(r => {
+    const key = r.country+r.disease+r.action.slice(0,40);
+    if (seen.has(key)) return false;
+    seen.add(key); return true;
+  });
+
+  document.getElementById('act-count').textContent = unique.length;
+  const tbody = document.getElementById('atbody');
+  tbody.innerHTML = '';
+
+  unique.forEach(r => {
+    const tr = document.createElement('tr');
+    const oc = overallColor(r.overall);
+    const dcls = DISEASE_CLS[r.disease]||'oncho';
+    tr.innerHTML = `<td><strong>${r.country}</strong></td>
+      <td><span class="rtag">${r.region}</span></td>
+      <td><span class="sbadge ${r.overall.replace(' ','-')}">${r.overall}</span></td>
+      <td><span class="dbadge ${dcls}">${DISEASE_ABBR[r.disease]||r.disease}</span></td>
+      <td style="max-width:500px;line-height:1.45;">${r.action}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  if (!unique.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="nodata">No actions match current filters.</td></tr>';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
